@@ -236,13 +236,13 @@ A very small list is begun here:
 
 ### Oil components
 
-Each oil spill model has its own way of describing the composition of the oil, and many track individual components or "psuedo components". Thus, it may not be possible to standardize these names, etc, but it would be good to perhaps capture the state of the practice here and see what shakes out.
+Each oil spill model has its own way of describing the composition of the oil, and many track individual components or "pseudo components". Thus, it may not be possible to standardize these names, etc, but it would be good to perhaps capture the state of the practice here and see what shakes out.
 
 ## API
 
 As this data format requires not entirely trivial data processing to read and write, this proposal is accompanied by a Python package that provides services to read and write the format. It might be good to standardize that API, so the people that need to read and write the format with other packages and different programming languages can communicate with each other.
 
-the nc_particles python package will serve as a reference implimentation.
+the nc_particles python package will serve as a reference implementation.
 
 ### Core API:
 
