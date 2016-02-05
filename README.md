@@ -1,6 +1,6 @@
 # nc_particles
 
-Project for the documentation, discussion,and Examples of a standard for a netcdf format for particle tracking Model results
+Project for the documentation, discussion, and Examples of a standard for a netcdf format for particle tracking model results
 
 This project contains:
 
