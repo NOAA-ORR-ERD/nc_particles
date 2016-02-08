@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 
+# for py2/3 compatibility
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+
 """
-Module for manipulating netcdf particle files
+Module for manipulating netcdf (and other) particle files
 
 This is useful for working with particle file output from GNOME,
 and is a test case for working with what hopefully will be a
 CF standard (or SOME standard..)
 
 """
+
 from __future__ import division
 from datetime import datetime
 
@@ -78,6 +83,7 @@ var_attributes['lat'] = var_attributes['latitude']
 ## used to remove them from the list of available data variables
 SPECIAL_VARIABLES = ['time','particle_count']
 
+
 class Writer(object):
     def __init__ (self, filename,
                         num_timesteps,
@@ -139,23 +145,22 @@ class Writer(object):
         self.num_data = 0
         self.current_timestep = 0
 
-    def write_timestep(self, timestep, data):
+    def write_timestep(self, timestamp, data):
         """
         write the data for a timestep
 
-        :param timestep: the time stamp of the timestep 
-        :type timestep: datetime object
+        :param timestamp: the time stamp of the timestep 
+        :type timestamp: datetime object
 
         :param data: dict of data arrays -- all parameters for a single time step
         :type data: dict
 
-        Note: it is assumed that the timestpes will be written sequentially,
+        Note: it is assumed that the timesteps will be written sequentially,
               and that the variables will not change after the first timestep
               is written.
         """
 
         nc = self.nc
-
         if self.current_timestep == 0:
             ## create the variables and add attributes
             for key, val in data.iteritems():
@@ -168,7 +173,7 @@ class Writer(object):
 
         particle_count = len(data.itervalues().next()) # length of an arbitrary array
         nc.variables['particle_count'][self.current_timestep] = particle_count
-        nc.variables['time'][self.current_timestep] = (timestep-self.ref_time).total_seconds()
+        nc.variables['time'][self.current_timestep] = (timestamp-self.ref_time).total_seconds()
         self.current_timestep += 1
         for key, val in data.iteritems():
             var = nc.variables[key]
