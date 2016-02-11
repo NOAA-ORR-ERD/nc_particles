@@ -39,7 +39,7 @@ all_data = [# three elements the first timestep
              # four elements the second time step
              {'time' : datetime.datetime(2010, 11, 3, 12, 30),
              'positions': np.array([(-88.0, 28.0, 0.0),
-                                    (-88.1, 28.0, 0.1),
+                                    (-88.2, 28.05, 0.1),
                                     (-88.1, 28.1, 0.2),
                                     (-87.9, 27.9, 0.1),
                                     ]),
@@ -48,7 +48,7 @@ all_data = [# three elements the first timestep
              },
              # two elements the third time step
              {'time' : datetime.datetime(2010, 11, 3, 13, 0),
-             'positions': np.array([(-88.0, 28.0, 0.0),
+             'positions': np.array([(-88.3, 28.1, 0.0),
                                     (-88.1, 28.0, 0.1),
                                     ]),
              'mass': [0.05, 0.06],

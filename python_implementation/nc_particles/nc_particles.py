@@ -85,11 +85,14 @@ SPECIAL_VARIABLES = ['time','particle_count']
 
 
 class Writer(object):
-    def __init__ (self, filename,
-                        num_timesteps,
-                        ref_time,
-                        file_attributes=file_attributes,
-                        var_attributes=var_attributes):
+    def __init__ (self,
+                  filename,
+                  num_timesteps=None,
+                  ref_time=None,
+                  file_attributes=file_attributes,
+                  var_attributes=var_attributes,
+                  nc_version=4,
+                  ):
 
         """
         create a nc_particle file Writer
@@ -100,10 +103,12 @@ class Writer(object):
         :param filename: name of netcdf file to open - if it exists,
                          it will be written over!
 
-        :param num_timesteps: number of timesteps that will be output
+        :param num_timesteps=None: number of timesteps that will be output. Must be defined for netcdf3.
+                                   Can be None for netcdf4
         :type num_timesteps: integer
 
-        :param ref_time: reference time for time units (i.e. seconds since..)
+        :param ref_time=None: reference time for time units (i.e. seconds since..).
+                              If None, the first time used will be used.
         :type ref_time: datetime object
 
         :param file_attributes: keys and values for teh file-level attributes.
@@ -113,6 +118,9 @@ class Writer(object):
         :param var_attributes: dist of variable names, and the keys and values for variable attributes.
                                Defaults to the set defined in this module.
         :type var_attributes: dict
+
+        :param nc_version=3: version of netcdf to use -- must be 3 or 4. If 4, some extra features are enabled.
+        :type nc_version: integer
         """
 
         self.num_timesteps = num_timesteps
@@ -121,7 +129,21 @@ class Writer(object):
         self.file_attributes = file_attributes
         self.var_attributes = var_attributes
 
-        nc = netCDF4.Dataset(filename, 'w', format='NETCDF3_CLASSIC')
+        try:
+            nc_version = int(nc_version)
+        except ValueError:
+            raise ValueError("nc_format must be 3 or 4")
+        if nc_version==3:
+            format = 'NETCDF3_CLASSIC'
+        elif nc_version == 4:
+            format = 'NETCDF4'
+        else:
+            raise ValueError("nc_format must be 3 or 4")
+
+        if nc_version == 3 and self.num_timesteps is None:
+            raise ValueError("You must specify num_timesteps when using netcdf3")
+
+        nc = netCDF4.Dataset(filename, 'w', format=format)
         self.nc = nc
 
         ## Global attributes
@@ -134,13 +156,21 @@ class Writer(object):
         
         ## required variables
         time = nc.createVariable('time', np.int32, ('time',))
-        time.units = 'seconds since {0}'.format(self.ref_time.isoformat())
         for name, value in var_attributes['time'].items():
             time.setncattr(name, value)
+        # make sure there are some units there
+        # this will get overwritten when the proper reference time is known
+        if self.ref_time is None:
+            # make sure there are some units there
+            # this will get overwritten when the proper reference time is known
+            time.units = "seconds since 2016-01-01T00:00:00"
+        else:
+            time.units = 'seconds since {0}'.format(self.ref_time.isoformat())
 
         pc = nc.createVariable('particle_count',np.int32, ('time',))
         for name, value in var_attributes['particle_count'].items():
             pc.setncattr(name, value)
+        self.time_var = time
 
         self.num_data = 0
         self.current_timestep = 0
@@ -163,6 +193,10 @@ class Writer(object):
         nc = self.nc
         if self.current_timestep == 0:
             ## create the variables and add attributes
+            # set the time units:
+            if self.ref_time is None:
+                self.ref_time = timestamp
+            nc.variables['time'].units = 'seconds since {0}'.format(self.ref_time.isoformat())
             for key, val in data.iteritems():
                 val = np.asarray(val)
                 var = nc.createVariable(key, datatype=val.dtype, dimensions=('data'))
@@ -182,12 +216,19 @@ class Writer(object):
             var[self.num_data:] = val
         self.num_data += particle_count
 
-
     def close(self):
         """
         close the netcdf file
         """
-        self.nc.close()
+        try:
+            self.nc.close()
+        except RuntimeError:
+            # just in case it isn't still open
+            pass
+
+    def __del__(self):
+        """ make sure to close the netcdf file """
+        self.close()
 
 class Reader(object):
     """
@@ -229,7 +270,11 @@ class Reader(object):
         return the names of all the variables associated with the particles
         """
         return [ var for var in self.nc.variables.keys() if var not in SPECIAL_VARIABLES]
-
+    def __str__(self):
+      return ("nc_particles Reader object:\n"
+              "variables: {}\n"
+              "number of timesteps: {}\n"
+              ).format(self.variables, len(self.times))
 
     def get_all_timesteps(self, variables=['latitude','longitude']):
          """
@@ -290,5 +335,21 @@ class Reader(object):
         for var in variables:
             data[var] = self.nc.variables[var][indexes]      
         return data
+
+    def close(self):
+        """
+        close the netcdf file
+        """
+        try:
+            self.nc.close()
+            print ("netcdf file closed")
+        except RuntimeError:
+            # just in case it isn't still open
+            pass
+
+    def __del__(self):
+        """ make sure to close the netcdf file """
+        self.close()
+
 
 
