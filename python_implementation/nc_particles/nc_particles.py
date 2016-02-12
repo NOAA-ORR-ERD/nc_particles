@@ -308,6 +308,17 @@ class Reader(object):
         """
         return self.nc.variables[variable].units
 
+    def get_attributes(self, variable):
+        """
+        return all the attributes of the given variable
+
+        :param variable: name of the variable for which the attributes are required
+        :type variable: string
+        """
+        var = self.nc.variables[variable]
+        return { name : var.getncattr(name) for name in var.ncattrs() }
+
+
     def get_timestep(self, timestep, variables=['latitude','longitude']):
         """
         returns the requested variables data from a given timestep as a

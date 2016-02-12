@@ -73,3 +73,12 @@ def test_get_units():
 
     assert r.get_units('depth') == 'meters'
     assert r.get_units('longitude') == 'degrees_east'
+
+def test_get_attributes():
+    r = nc_particles.Reader('sample.nc')
+
+    assert  r.get_attributes('depth') == {'units' : "meters",
+                                          'long_name' : "particle depth below sea surface",
+                                          'standard_name' : "depth",
+                                          'axis' : "z positive down",
+                                          }
