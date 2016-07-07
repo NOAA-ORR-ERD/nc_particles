@@ -115,11 +115,13 @@ class Writer(object):
                                 Defaults to the set defined in this module.
         :type file_attributes: dict
 
-        :param var_attributes: dist of variable names, and the keys and values for variable attributes.
+        :param var_attributes: dist of variable names, and the keys and values for variable
+                               attributes.
                                Defaults to the set defined in this module.
         :type var_attributes: dict
 
-        :param nc_version=3: version of netcdf to use -- must be 3 or 4. If 4, some extra features are enabled.
+        :param nc_version=3: version of netcdf to use -- must be 3 or 4. If 4, some extra
+                             features are enabled.
         :type nc_version: integer
         """
 
@@ -133,7 +135,7 @@ class Writer(object):
             nc_version = int(nc_version)
         except ValueError:
             raise ValueError("nc_format must be 3 or 4")
-        if nc_version==3:
+        if nc_version == 3:
             format = 'NETCDF3_CLASSIC'
         elif nc_version == 4:
             format = 'NETCDF4'
@@ -146,15 +148,15 @@ class Writer(object):
         nc = netCDF4.Dataset(filename, 'w', format=format)
         self.nc = nc
 
-        ## Global attributes
+        # Global attributes
         for (name, value) in self.file_attributes.items():
             setattr(nc, name, value)
-        
-        ## Dimensions
-        nc.createDimension('time', self.num_timesteps )
+
+        # Dimensions
+        nc.createDimension('time', self.num_timesteps)
         nc.createDimension('data', None)
-        
-        ## required variables
+
+        # required variables
         time = nc.createVariable('time', np.int32, ('time',))
         for name, value in self.var_attributes['time'].items():
             time.setncattr(name, value)
@@ -167,7 +169,7 @@ class Writer(object):
         else:
             time.units = 'seconds since {0}'.format(self.ref_time.isoformat())
 
-        pc = nc.createVariable('particle_count',np.int32, ('time',))
+        pc = nc.createVariable('particle_count', np.int32, ('time',))
         for name, value in self.var_attributes['particle_count'].items():
             pc.setncattr(name, value)
         self.time_var = time
@@ -179,7 +181,7 @@ class Writer(object):
         """
         write the data for a timestep
 
-        :param timestamp: the time stamp of the timestep 
+        :param timestamp: the time stamp of the timestep
         :type timestamp: datetime object
 
         :param data: dict of data arrays -- all parameters for a single time step
@@ -192,7 +194,7 @@ class Writer(object):
 
         nc = self.nc
         if self.current_timestep == 0:
-            ## create the variables and add attributes
+            # create the variables and add attributes
             # set the time units:
             if self.ref_time is None:
                 self.ref_time = timestamp
@@ -205,9 +207,9 @@ class Writer(object):
                     for name, value in self.var_attributes[key].items():
                         var.setncattr(name, value)
 
-        particle_count = len(data.itervalues().next()) # length of an arbitrary array
+        particle_count = len(data.itervalues().next())  # length of an arbitrary array
         nc.variables['particle_count'][self.current_timestep] = particle_count
-        nc.variables['time'][self.current_timestep] = (timestamp-self.ref_time).total_seconds()
+        nc.variables['time'][self.current_timestep] = (timestamp - self.ref_time).total_seconds()
         self.current_timestep += 1
         for key, val in data.iteritems():
             var = nc.variables[key]
@@ -229,6 +231,7 @@ class Writer(object):
     def __del__(self):
         """ make sure to close the netcdf file """
         self.close()
+
 
 class Reader(object):
     """
@@ -258,10 +261,10 @@ class Reader(object):
         units = time.getncattr('units')
         self.times = netCDF4.num2date(time[:], units)
         self.time_units = units
-                
+
         self.particle_count = self.nc.variables['particle_count']
         # build the index:
-        self.data_index = np.zeros((len(self.times)+1,), dtype=np.int32 )
+        self.data_index = np.zeros((len(self.times) + 1,), dtype=np.int32)
         self.data_index[1:] = np.cumsum(self.particle_count)
 
     @property
@@ -269,36 +272,37 @@ class Reader(object):
         """
         return the names of all the variables associated with the particles
         """
-        return [ var for var in self.nc.variables.keys() if var not in SPECIAL_VARIABLES]
+        return [var for var in self.nc.variables.keys() if var not in SPECIAL_VARIABLES]
+
     def __str__(self):
-      return ("nc_particles Reader object:\n"
-              "variables: {}\n"
-              "number of timesteps: {}\n"
-              ).format(self.variables, len(self.times))
+        return ("nc_particles Reader object:\n"
+                "variables: {}\n"
+                "number of timesteps: {}\n"
+                ).format(self.variables, len(self.times))
 
-    def get_all_timesteps(self, variables=['latitude','longitude']):
-         """
-         returns the requested variables data from all timesteps as a
-         dictionary keyed by the variable names
+    def get_all_timesteps(self, variables=['latitude', 'longitude']):
+        """
+        returns the requested variables data from all timesteps as a
+        dictionary keyed by the variable names
 
-         :param variables: the variables desired as a list string names.
-                           Defaults to ['latitude','longitude']
-         :type variables: list of strings
+        :param variables: the variables desired as a list string names.
+                          Defaults to ['latitude','longitude']
+        :type variables: list of strings
 
-         :returns data: returns a dict of arrays -- the keys are the
-                        variable names, and the values are numpy arrays
+        :returns data: returns a dict of arrays -- the keys are the
+                       variable names, and the values are numpy arrays
                         of the data. The arrays are the flattened ragged
                         array of data.
-         """
-         data = {}
-         for var in variables:
+        """
+        data = {}
+        for var in variables:
             data[var] = []
             for i in range(len(self.times)):
                 ind1 = self.data_index[i]
-                ind2 = self.data_index[i+1]
-                data[var].append( self.nc.variables[var][ind1:ind2] )      
-         return data
-    
+                ind2 = self.data_index[i + 1]
+                data[var].append(self.nc.variables[var][ind1:ind2])
+        return data
+
     def get_units(self, variable):
         """
         return the units of the given variable
@@ -316,10 +320,9 @@ class Reader(object):
         :type variable: string
         """
         var = self.nc.variables[variable]
-        return { name : var.getncattr(name) for name in var.ncattrs() }
+        return {name: var.getncattr(name) for name in var.ncattrs()}
 
-
-    def get_timestep(self, timestep, variables=['latitude','longitude']):
+    def get_timestep(self, timestep, variables=['latitude', 'longitude']):
         """
         returns the requested variables data from a given timestep as a
         dictionary keyed by the variable names
@@ -332,19 +335,19 @@ class Reader(object):
                        variable names, and the values are numpy arrays
                        of the data.
         """
-        ind1, ind2 = self.data_index[timestep:timestep+2]
-        return {var:self.nc.variables[var][ind1:ind2] for var in variables}
-        
-    def get_individual_trajectory(self, particle_id, variables=['latitude','longitude']):
+        ind1, ind2 = self.data_index[timestep:timestep + 2]
+        return {var: self.nc.variables[var][ind1:ind2] for var in variables}
+
+    def get_individual_trajectory(self, particle_id, variables=['latitude', 'longitude']):
         """
         returns the requested variables from trajectory of an individual particle
-        
+
         note: this is inefficient -- it has to read the entire file to get it.
         """
         indexes = np.where(self.nc.variables['id'][:] == particle_id)
         data = {}
         for var in variables:
-            data[var] = self.nc.variables[var][indexes]      
+            data[var] = self.nc.variables[var][indexes]
         return data
 
     def close(self):
@@ -361,6 +364,3 @@ class Reader(object):
     def __del__(self):
         """ make sure to close the netcdf file """
         self.close()
-
-
-
