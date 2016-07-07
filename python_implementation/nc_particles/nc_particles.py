@@ -156,7 +156,7 @@ class Writer(object):
         
         ## required variables
         time = nc.createVariable('time', np.int32, ('time',))
-        for name, value in var_attributes['time'].items():
+        for name, value in self.var_attributes['time'].items():
             time.setncattr(name, value)
         # make sure there are some units there
         # this will get overwritten when the proper reference time is known
@@ -168,7 +168,7 @@ class Writer(object):
             time.units = 'seconds since {0}'.format(self.ref_time.isoformat())
 
         pc = nc.createVariable('particle_count',np.int32, ('time',))
-        for name, value in var_attributes['particle_count'].items():
+        for name, value in self.var_attributes['particle_count'].items():
             pc.setncattr(name, value)
         self.time_var = time
 
@@ -201,8 +201,8 @@ class Writer(object):
                 val = np.asarray(val)
                 var = nc.createVariable(key, datatype=val.dtype, dimensions=('data'))
                 # if it's a standard variable, add the attributes
-                if key in var_attributes:
-                    for name, value in var_attributes[key].items():
+                if key in self.var_attributes:
+                    for name, value in self.var_attributes[key].items():
                         var.setncattr(name, value)
 
         particle_count = len(data.itervalues().next()) # length of an arbitrary array
