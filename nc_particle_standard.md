@@ -229,9 +229,9 @@ A very small list is begun here:
 
 
 | Standard name	        | Canonical Units |  Description
-|.......................|.................|..............
-| particle_mass	        | g (kg?)	      | Total mass of particle
-| particle_age	        | seconds	      | 
+|-----------------------|-----------------|--------------
+| particle_mass	        | g (kg?)	  | Total mass of particle
+| particle_age	        | seconds	  | 
 | droplet_diameter      | meters          | diameter of oil droplets (or gas bubbles?)		
 
 ### Oil components
