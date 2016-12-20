@@ -6,9 +6,8 @@ This project contains:
 
 ### The project proposal:
 
-[Read more words!](nc_particle_standard.md)
+[nc_particles Proposal](http://noaa-orr-erd.github.io/nc_particles/nc_particle_standard.html)
 
-``nc_particle_standard.md``
 
 ### Example data files
 
