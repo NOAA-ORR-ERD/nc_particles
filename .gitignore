@@ -1,6 +1,9 @@
 # for the Mac
 .DS_Store
 
+# for Jekyl
+_site/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -6,13 +6,13 @@ It was designed with oil spill models in mind, but should support othe particle 
 
 [The standard is here: ](nc_particle_standard.md)
 
-The development of the standardis being mananged in a gitHub project:
+The development of the standard is being mananged in a gitHub project:
 
-https://github.com/NOAA-ORR-ERD/nc_particles
+[nc_particles gitHub project](https://github.com/NOAA-ORR-ERD/nc_particles)
 
 Please add issues to that project with questions and suggestions.
 
 If you would like to contribute updated or changed text, you can use gitHub's "Pull Request" system:
 
-https://help.github.com/articles/creating-a-pull-request/
+[How to create a Pull Request on gitHub](https://help.github.com/articles/creating-a-pull-request/)
 
