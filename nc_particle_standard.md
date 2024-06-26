@@ -1,17 +1,17 @@
-# Draft Proposal for a netcdf standard for storing/sharing data from particle tracking models.
+# A netcdf standard for storing/sharing data from particle tracking models.
 
-Version: 0.1.0
+Version: 1.0.0
 
 Authors: (please add yourself here ... )
 
 Chris Barker: NOAA Emergency Response Division: Chris.Barker@noaa.gov
 
 
-This document is being developed and manged via a gitHub project:
+This document is being developed and managed via a gitHub project:
 
 [nc_particles gitHub project](https://github.com/NOAA-ORR-ERD/nc_particles)
 
-Please use issues in that project for comments and issues.
+Please use issues and pull requests in that project for comments and issues.
 
 ## Motivation:
 
