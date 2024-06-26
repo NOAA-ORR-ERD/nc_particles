@@ -2,11 +2,11 @@
 
 This project seeks to define a standardized format for sharing the results of particle tracking models.
 
-It was designed with oil spill models in mind, but should support othe particle tracking applications.
+It was designed with oil spill models in mind, but should support other particle tracking applications.
 
 [The standard is here: ](nc_particle_standard.md)
 
-The development of the standard is being mananged in a gitHub project:
+The development of the standard is being managed in a gitHub project:
 
 [nc_particles gitHub project](https://github.com/NOAA-ORR-ERD/nc_particles)
 
