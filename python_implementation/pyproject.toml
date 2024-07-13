@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "nc_particles"
+authors = [
+  {name = "Christopher H. Barker", email = "chris.barker@noaa.gov"},
+]
+description = "Code for working with the nc_particles format for storing particle tracking model results in netcdf"
+dynamic = ["version"]
+readme = "README.md"
+license = {text = "CC-0 -- Public Domain"}
+dependencies = [
+  "numpy<2",
+  "xarray",
+  "netCDF4",
+]
+requires-python = ">= 3.10"
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+
+  "Intended Audience :: Science/Research",
+  "Topic :: Software Development :: Build Tools",
+  "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Repository = "https://github.com/NOAA-ORR-ERD/nc_particles"
+
+[tool.hatch.version]
+path = "src/nc_particles/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+ignore-vcs = false # so it will use .gitignore
+
+# [tool.hatch.build.targets.sdist]
+# include = [
+#   "pkg/*.py",
+#   "/tests",
+# ]
+# exclude = [
+#   "*.json",
+#   "pkg/_compat.py",
+# ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nc_particles"]
+
