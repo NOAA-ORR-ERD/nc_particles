@@ -112,11 +112,11 @@ class ParticleVariable():
     Currently only 2D, but should be extendable
 
     """
-    def __init__(self, var, particle_id, particle_counts):
-        self._particle_id = particle_id
-        super().__init__(var, particle_counts)    
+    # def __init__(self, var, particle_id, particle_counts):
+    #     self._particle_id = particle_id
+    #     super().__init__(var, particle_counts)
 
-    def __init__(self, data, row_lengths, particle_ids=None):
+    def __init__(self, data, row_lengths, particle_ids=None, FillValue=None):
         """
         Initialize a RaggedArray from existing data.
 
@@ -124,6 +124,12 @@ class ParticleVariable():
         :param row_lengths: length of each individual row
                ``sum(row_lengths)`` should equal the length
                of the data array.
+        :param particle_ids=None: IDs of the particles, so that you can track
+                                  a particular particle. should be the same size and data.
+
+        :param FillValue=None: value to use to fill the empty parts of the array
+                                when returning a rectangular version. Defalts to
+                                NaN for floats, and maxint for integer types.
 
         """
         data = xr.DataArray(data, dims=('data',))
@@ -135,18 +141,87 @@ class ParticleVariable():
         self._start_indexes = np.zeros((len(row_lengths) + 1,), dtype=np.int32)
         self._start_indexes[1:] = np.cumsum(row_lengths)
         if particle_ids is None:
-            self._particle_ids = np.zeros((len(data)), dtype=np.int32)
+            _particle_ids = np.zeros((len(data)), dtype=np.int32)
             for idx, rl in zip(self._start_indexes, row_lengths):
-                self._particle_ids[idx:idx+rl] = range(rl)
+                _particle_ids[idx:idx+rl] = range(rl)
+        else:
+            _particle_ids = np.array(particle_ids, dtype=np.int32)
 
-        self._particle_ids = particle_ids
+        self._particle_ids = xr.DataArray(_particle_ids, dims=('data',))
+
+        self._FillValue = self._get_fill_value(data.dtype) if FillValue is None else FillValue
 
     @classmethod
-    def empty(cls, row_lengths, dtype=np.float64):
+    def from_nested_data(cls, data, *, dtype=np.float64, particle_ids=None, FillValue=None):
+        """
+        create a ParticleVariable for already nested data:
+
+        data = [[1, 2, 3, 4],
+                [5, 6],
+                [7, 8, 9, 10, 11],
+                [12, 13, 14],
+                ]
+
+        :param data: data as nested sequences
+
+        :param dtype=None: data type of data
+
+        :param particle_ids=None: IDs of particles -- should be same shape as the data.
+
+        :param FillValue=None: Fill Value to use when making full arrays from data.
+        """
+
+        # unpack the data:
+        row_lengths = []
+        data_arr = []
+        for row in data:
+            data_arr.extend(row)
+            row_lengths.append(len(row))
+        if particle_ids is None:
+            particle_ids_arr = None
+        else:
+            particle_ids_arr = []
+            for pid in particle_ids:
+                particle_ids_arr.extend(pid)
+        data_arr = np.array(data_arr, dtype=dtype)
+        return cls(data_arr, row_lengths, particle_ids_arr, FillValue)
+
+    def append_row(self, row, particle_ids=None):
+        """
+        Add a new row to the data.
+        :param row: the data for that timestep
+
+        :param particle_ids: ids of the particle in that row
+        """
+        row = xr.DataArray(row, dims=('data',))
+        if particle_ids is None:
+            particle_ids = np.range(len(row), dtype=np.int32)
+        else:
+            particle_ids = np.array(particle_ids, dtype=np.int32)
+        particle_ids = xr.DataArray(particle_ids, dims=('data',))
+        self._particle_ids = xr.concat((self._particle_ids, particle_ids), 'data')
+        self._data_array = xr.concat((self._data_array, row), 'data')
+        end = self._start_indexes[-1] + len(row)
+        self._start_indexes = np.append(self._start_indexes, end)
+
+    @staticmethod
+    def _get_fill_value(dtype):
+        try:
+             fv = np.iinfo(dtype).max
+        except ValueError:
+            try:
+                np.finfo(dtype)
+                fv = np.nan
+            except ValueError as err:
+                raise TypeError("dtype must be a numpy numerical data type") from err
+        return fv
+
+    @classmethod
+    def empty(cls, row_lengths, dtype=np.float64, FillValue=None):
         """
         create an empty ragged array
 
-        :param num_lengths: Sequence of row lengths. This is a full
+        :param row_lengths: Sequence of row lengths. This is a full
                             specification of the shape and size.
 
         """
@@ -156,16 +231,18 @@ class ParticleVariable():
         # self._row_lengths = row_lengths
         self._start_indexes = np.zeros((len(row_lengths) + 1,), dtype=np.int32)
         self._start_indexes[1:] = np.cumsum(row_lengths)
+        self._FillValue = self._get_fill_value(self._data_array.dtype) if FillValue is None else FillValue
+
         return self
 
     @classmethod
-    def ones(cls, row_lengths, dtype=np.float64):
+    def ones(cls, row_lengths, dtype=np.float64, FillValue=None):
         self = cls.empty(row_lengths, dtype)
         self._data_array[:] = 1
         return self
 
     @classmethod
-    def zeros(cls, row_lengths, dtype=np.float64):
+    def zeros(cls, row_lengths, dtype=np.float64, FillValue=None):
         self = cls.empty(row_lengths, dtype)
         self._data_array[:] = 0
         return self
@@ -173,6 +250,14 @@ class ParticleVariable():
     @property
     def dtype(self):
         return self._data_array.dtype
+
+    @property
+    def __array__(self):
+        arr = np.empty(self.shape, dtype=self.dtype)
+        arr[:] = self._FillValue
+        for i, row in enumerate(self):
+            arr[i,:len(row)] = row
+        return arr
 
     def __repr__(self):
         rep = ["Ragged Array:"]
@@ -195,6 +280,14 @@ class ParticleVariable():
             result = self._data_array[self._start_indexes[ind] : self._start_indexes[ind+1]]
 
         return result
+
+    @property
+    def shape(self):
+        return (len(self), np.diff(self._start_indexes).max())
+
+    def __len__(self):
+        return len(self._start_indexes) - 1
+
 
 
 # class ParticleVariable(RaggedArray):

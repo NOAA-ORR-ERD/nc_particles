@@ -1,6 +1,7 @@
 """
 tests for particles
 """
+
 from pathlib import Path
 import numpy as np
 import xarray as xr
@@ -36,6 +37,82 @@ def test_construction():
     print(ra._data_array)
     assert np.array_equal(ra._data_array, np.zeros((sum(rows),), dtype=np.float32))
     assert ra.dtype == np.dtype(np.float32)
+
+def test_from_nested_data():
+    data = [[1, 2, 3, 4],
+            [5, 6],
+            [7, 8, 9, 10, 11],
+            [12, 13, 14],
+            ]
+    pids = [[1, 2, 3, 4],
+            [2, 4],
+            [2, 4, 5, 6, 7],
+            [5, 6, 7],
+            ]
+
+    ra = ParticleVariable.from_nested_data(data, particle_ids=pids, dtype=np.float32)
+
+    # print(f"{ra._start_indexes=}")
+
+    for row1, row2 in zip(data, ra):
+        assert np.array_equal(row1, row2)
+    # testing interenal structure -- but what can you do?
+    for row1, row2 in zip(data, ra):
+        assert np.array_equal(row1, row2)
+    assert np.array_equal(ra._particle_ids, [1, 2, 3, 4, 2, 4, 2, 4, 5, 6, 7, 5, 6, 7])
+
+def test_append_row():
+    data = [[1, 2, 3, 4],
+            [5, 6],
+            [7, 8, 9, 10, 11],
+            [12, 13, 14],
+            ]
+    pids = [[1, 2, 3, 4],
+            [2, 4],
+            [2, 4, 5, 6, 7],
+            [5, 6, 7],
+            ]
+
+    row = [15, 16, 17, 18, 19]
+    row_pids = [5, 7, 8, 9, 10]
+    ra = ParticleVariable.from_nested_data(data, particle_ids=pids, dtype=np.float32)
+
+    ra.append_row(row, row_pids)
+
+    data.append(row)
+    pids.append(row_pids)
+    for row1, row2 in zip(data, ra):
+        assert np.array_equal(row1, row2)
+
+    assert np.array_equal(ra._particle_ids, [1, 2, 3, 4, 2, 4, 2, 4, 5, 6, 7, 5, 6, 7, 5, 7, 8, 9, 10])
+
+def test__array__():
+    """
+    The __array__ property should return a regular old numpy array
+
+    In this case, it will be a left aligned rectangular array.
+
+    ._FillValue is used to fill the empty space.
+    """
+    rows = [3, 5, 2, 7]
+
+    fv = 2147483647
+    filled = np.array([[1,  1,  1, fv, fv, fv, fv],
+                       [1,  1,  1,  1,  1, fv, fv],
+                       [1,  1, fv, fv, fv, fv, fv],
+                       [1,  1,  1,  1,  1,  1,  1],
+                       ], dtype=np.int32)
+
+    ra = ParticleVariable.ones(rows, dtype=np.int32)
+
+    arr = ra.__array__
+
+    assert isinstance(arr, np.ndarray)
+
+    print(filled)
+    print(arr)
+    assert np.array_equal(arr, filled)
+
 
 
 def test_indexing():
@@ -98,14 +175,31 @@ def test_init_particles_from_dataset():
     # print(f"{type(parts.times[0])}")
 
     assert parts.times.shape == (3,)
-    # assert parts.times[0] == (3,)
-    # assert parts.times[2] == (3,)
 
     assert parts.variables.keys() == {'latitude', 'depth', 'mass', 'longitude'}
 
-    print(parts.variables['latitude'][1])
-
     # check variables
+    lat = parts.variables['latitude']
+    print(f"{type(lat)}")
+    assert len(lat) == 3
+    assert lat.shape == (3, 4)
+    assert lat.dtype == np.float64
 
-    # assert False
+
+def test_get_fill_value():
+    fv = ParticleVariable._get_fill_value(np.float64)
+    print(fv)
+    assert np.isnan(fv)
+
+    fv = ParticleVariable._get_fill_value(np.float32)
+    print(fv)
+    assert np.isnan(fv)
+
+    fv = ParticleVariable._get_fill_value(np.int32)
+    print(fv)
+    assert fv == 2147483647
+
+    fv = ParticleVariable._get_fill_value(np.uint8)
+    print(fv)
+    assert fv == 255
 

@@ -1,0 +1,59 @@
+netcdf sample {
+dimensions:
+	time = 3 ;
+	data = UNLIMITED ; // (9 currently)
+variables:
+	int time(time) ;
+		string time:comment = "unspecified time zone" ;
+		string time:long_name = "time since the beginning of the simulation" ;
+		string time:standard_name = "time" ;
+		string time:calendar = "gregorian" ;
+		string time:units = "seconds since 2010-11-01T00:00:00" ;
+	int particle_count(time) ;
+		string particle_count:units = "1" ;
+		string particle_count:long_name = "number of particles in a given timestep" ;
+		string particle_count:ragged_row_count = "particle count at nth timestep" ;
+	double latitude(data) ;
+		string latitude:units = "degrees_north" ;
+		string latitude:long_name = "latitude of the particle" ;
+		string latitude:standard_name = "latitude" ;
+	double depth(data) ;
+		string depth:units = "meters" ;
+		string depth:long_name = "particle depth below sea surface" ;
+		string depth:standard_name = "depth" ;
+		string depth:axis = "z positive down" ;
+	double mass(data) ;
+		string mass:units = "grams" ;
+		string mass:long_name = "mass of particle" ;
+	int id(data) ;
+		string id:long_name = "particle ID" ;
+	double longitude(data) ;
+		string longitude:units = "degrees_east" ;
+		string longitude:long_name = "longitude of the particle" ;
+		string longitude:standard_name = "longitude" ;
+
+// global attributes:
+		string :comment = "Some simple test data" ;
+		string :source = "example data from nc_particles" ;
+		string :references = "" ;
+		string :title = "Sample data/file for particle trajectory format" ;
+		string :CF\:featureType = "particle_trajectory" ;
+		string :history = "Evolved with discussion on CF-metadata listserve" ;
+		string :institution = "NOAA Emergency Response Division" ;
+		string :conventions = "CF-1.6" ;
+data:
+
+ time = 216000, 217800, 219600 ;
+
+ particle_count = 3, 4, 2 ;
+
+ latitude = 28, 28, 28.1, 28, 28.05, 28.1, 27.9, 28.1, 28 ;
+
+ depth = 0, 0.1, 0.2, 0, 0.1, 0.2, 0.1, 0, 0.1 ;
+
+ mass = 0.1, 0.05, 0.07, 0.1, 0.05, 0.07, 0.06, 0.05, 0.06 ;
+
+ id = 0, 1, 2, 0, 1, 2, 3, 1, 3 ;
+
+ longitude = -88, -88.1, -88.1, -88, -88.2, -88.1, -87.9, -88.3, -88.1 ;
+}

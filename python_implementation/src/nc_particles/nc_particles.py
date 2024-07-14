@@ -217,6 +217,8 @@ class Writer(object):
         """
         close the netcdf file
         """
+        if not hasattr(self, 'nc'):
+            return
         try:
             self.nc.close()
         except RuntimeError:
