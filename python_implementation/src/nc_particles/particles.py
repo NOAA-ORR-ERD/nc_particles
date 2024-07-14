@@ -182,6 +182,8 @@ class ParticleVariable():
         else:
             particle_ids_arr = []
             for pid in particle_ids:
+                if len(np.unique(pid)) != len(pid):
+                    raise ValueError("particle_ids must be unique")
                 particle_ids_arr.extend(pid)
         data_arr = np.array(data_arr, dtype=dtype)
         return cls(data_arr, row_lengths, particle_ids_arr, FillValue)
@@ -198,11 +200,53 @@ class ParticleVariable():
             particle_ids = np.range(len(row), dtype=np.int32)
         else:
             particle_ids = np.array(particle_ids, dtype=np.int32)
+        if len(np.unique(particle_ids)) != len(particle_ids):
+            raise ValueError("particle_ids must be unique")
         particle_ids = xr.DataArray(particle_ids, dims=('data',))
         self._particle_ids = xr.concat((self._particle_ids, particle_ids), 'data')
         self._data_array = xr.concat((self._data_array, row), 'data')
         end = self._start_indexes[-1] + len(row)
         self._start_indexes = np.append(self._start_indexes, end)
+
+    def get_by_id(self, pid):
+        """
+        Return a full 1D array of the data corresponding to a particle id
+
+        :param id: the id of the particle the data is for
+
+        returns 1D array, with any missing data replaced by the FillValue
+        """
+        # NOTE: this is not very optimized, there may be a better way
+        path = np.empty((len(self),), dtype=self.dtype)
+        path[:] = self._FillValue
+        for idx in range(len(self._start_indexes) - 1):
+            start, end = self._start_indexes[idx], self._start_indexes[idx+1]
+            row = self._data_array[start:end]
+            ids = self._particle_ids[start:end]
+            try:
+                path[idx] = row[np.where(ids==pid)][0]
+            except IndexError: # nothing there, move on.
+                pass
+        return path
+
+    def as_full_array(self):
+        """
+        Return a full 2D array of the data, with the particle ids
+        aligned.
+
+        Returns: ids, full_array
+            ids is 1-d array of the ids corresponding to the columns
+            full_array is a 2D array, with any missing data replaced by the FillValue
+        """
+        # FixME: should this return an xarray.DataArray ?
+        # NOTE: this is not very optimized, there may be a better way
+        #       and could certainly be optimized for the special case
+        #       of a dense array
+        all_ids = np.unique(self._particle_ids)
+        full_arr = np.full((len(self), len(all_ids)), self._FillValue, dtype = self.dtype)
+        for idx, id in enumerate(all_ids):
+            full_arr[:, idx] = self.get_by_id(id)
+        return all_ids, full_arr
 
     @staticmethod
     def _get_fill_value(dtype):

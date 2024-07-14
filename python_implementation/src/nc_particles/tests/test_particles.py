@@ -160,6 +160,58 @@ def test_init_from_bad_data():
         ra = ParticleVariable(data, rows)
 
 
+def test_get_by_id():
+    data = [[1, 2, 3, 4],
+            [5, 6],
+            [7, 8, 9, 10, 11],
+            [12, 13, 14],
+            ]
+    pids = [[1, 2, 3, 4],
+            [2, 4],
+            [2, 4, 5, 6, 7],
+            [5, 6, 7],
+            ]
+
+    ra = ParticleVariable.from_nested_data(data, particle_ids=pids, dtype=np.float32)
+
+    particle_data = ra.get_by_id(2)
+    assert np.array_equal(particle_data, [2, 5, 7, np.nan], equal_nan=True)
+
+    particle_data = ra.get_by_id(7)
+    assert np.array_equal(particle_data, [np.nan, np.nan, 11, 14], equal_nan=True)
+
+def test_get_full_array():
+    """
+    Returns a full array, matching the particle IDs, and
+    filling the missing values with FillValue
+    """
+    data = [[1, 2, 3, 4],
+            [5, 6],
+            [7, 8, 9, 10, 11],
+            [12, 13, 14],
+            ]
+    pids = [[1, 2, 3, 4],
+            [2, 4],
+            [2, 4, 5, 6, 7],
+            [5, 6, 7],
+            ]
+
+    full_pid  =  [     1,      2,      3,      4,      5,      6,      7]
+    full_data = [[     1,      2,      3,      4, np.nan, np.nan, np.nan],
+                 [np.nan,      5, np.nan,      6, np.nan, np.nan, np.nan],
+                 [np.nan,      7, np.nan,      8,      9,     10,     11],
+                 [np.nan, np.nan, np.nan, np.nan,   12,     13,     14],
+                 ]
+
+    ra = ParticleVariable.from_nested_data(data, particle_ids=pids, dtype=np.float32)
+
+    f_pids, full = ra.as_full_array()
+
+    assert full.shape == (4, 7)
+    assert np.array_equal(f_pids, full_pid)
+    assert np.array_equal(full, full_data, equal_nan=True)
+
+
 # tests of the Particles class
 def test_init_particles_from_dataset():
     '''
