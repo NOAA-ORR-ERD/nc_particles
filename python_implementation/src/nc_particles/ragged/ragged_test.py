@@ -26,6 +26,7 @@ for row in ra:
 npa = ragged.asarray(ra)
 print(npa)
 
+xda = xr.DataArray()
 
 
 

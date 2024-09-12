@@ -28,7 +28,7 @@ class Particles():
 
         Should support anything xarray does.
         """
-        ds = xarray.open_dataset(filename)
+        ds = xr.open_dataset(filename)
         return cls.from_dataset(ds)
 
     @classmethod
@@ -98,27 +98,15 @@ class Particles():
 
         return self
 
-
-
-
 class ParticleVariable():
     """
-    Ragged array class -- numpy-array-like to hold ragged array data.
-
-    A ragged array is one in which the last dimension can have varying length "rows".
-
-    e.g. NxX where X can vary.
-
-    Currently only 2D, but should be extendable
+    xarray-Variable-like that holds the data associated with the particles
 
     """
-    # def __init__(self, var, particle_id, particle_counts):
-    #     self._particle_id = particle_id
-    #     super().__init__(var, particle_counts)
 
     def __init__(self, data, row_lengths, particle_ids=None, FillValue=None):
         """
-        Initialize a RaggedArray from existing data.
+        Initialize a ParticleVariable from existing data.
 
         :param data: 1D array of data to be stored
         :param row_lengths: length of each individual row
@@ -148,7 +136,6 @@ class ParticleVariable():
             _particle_ids = np.array(particle_ids, dtype=np.int32)
 
         self._particle_ids = xr.DataArray(_particle_ids, dims=('data',))
-
         self._FillValue = self._get_fill_value(data.dtype) if FillValue is None else FillValue
 
     @classmethod
@@ -251,13 +238,21 @@ class ParticleVariable():
     @staticmethod
     def _get_fill_value(dtype):
         try:
+            if issubclass(dtype.type, (np.datetime64, np.timedelta64)):
+                fv = np.array('NaT', dtype=dtype)
+                return fv
+        except AttributeError:
+            # not a datetime dtype -- really not sure how that works!
+            pass
+
+        try:
              fv = np.iinfo(dtype).max
         except ValueError:
             try:
                 np.finfo(dtype)
                 fv = np.nan
             except ValueError as err:
-                raise TypeError("dtype must be a numpy numerical data type") from err
+                raise TypeError("dtype must be a numpy numerical or datetime64 data type") from err
         return fv
 
     @classmethod
@@ -304,11 +299,17 @@ class ParticleVariable():
         return arr
 
     def __repr__(self):
-        rep = ["Ragged Array:"]
-
+        rep = ["ParticleVariable:"]
         for row in self:
-            rep.append(str(row))
+            rep.append(str(row.data))
         return "\n".join(rep)
+
+    def __str__(self):
+        rep = ["ParticleVariable:"]
+        for row in self:
+            rep.append(str(list(row.data))[1:-1])
+        return "\n".join(rep)
+
 
     def __getitem__(self, indexes):
         # is it multiple indexes?

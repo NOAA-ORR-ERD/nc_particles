@@ -128,6 +128,19 @@ def test_indexing():
         print(row)
         assert row.shape == (rl,)
 
+def test_str():
+    rows = [3, 5, 2, 7]
+    ra = ParticleVariable.ones(rows, dtype=np.int32)
+
+    string = str(ra)
+
+    print(string)
+
+    assert string == """ParticleVariable:
+1, 1, 1
+1, 1, 1, 1, 1
+1, 1
+1, 1, 1, 1, 1, 1, 1"""
 
 def test_iteration():
     rows = [3, 5, 2, 7]
@@ -254,4 +267,10 @@ def test_get_fill_value():
     fv = ParticleVariable._get_fill_value(np.uint8)
     print(fv)
     assert fv == 255
+
+    fv = ParticleVariable._get_fill_value(np.dtype('<m8[ns]'))
+    print(fv)
+    assert np.isnat(fv)
+
+
 
