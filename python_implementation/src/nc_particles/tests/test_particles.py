@@ -250,6 +250,43 @@ def test_init_particles_from_dataset():
     assert lat.shape == (3, 4)
     assert lat.dtype == np.float64
 
+def test_getitem():
+    """
+    should be able to index by variable name
+    """
+    parts = Particles.from_file(sample_file)
+
+    print(parts.variables.keys())
+    with pytest.raises(KeyError):
+        assert parts['fred'] == 4
+
+    mass = parts['mass']
+    # not sure what else to test ...
+    assert mass.shape == (3, 4)
+
+
+def test_iter():
+    """
+    Iterating over the Particles object should yield the variable names
+    (like a dict)
+    """
+    parts = Particles.from_file(sample_file)
+
+    assert sorted(list(parts)) == sorted(['latitude', 'depth', 'mass', 'longitude'])
+
+
+def test_keys():
+    parts = Particles.from_file(sample_file)
+    assert sorted(list(parts.keys())) == sorted(['latitude', 'depth', 'mass', 'longitude'])
+
+
+def test_dict_interface():
+    """
+    seems kludgy, but this should test that it all works :-)
+    """
+    parts = Particles.from_file(sample_file)
+    assert list(zip(parts.keys(), parts.values())) == list(parts.items())
+
 
 def test_get_fill_value():
     fv = ParticleVariable._get_fill_value(np.float64)

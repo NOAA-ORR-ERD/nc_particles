@@ -98,6 +98,29 @@ class Particles():
 
         return self
 
+    def __getitem__(self, key):
+        """
+        Indexes by variable name, like a dict.
+        """
+        return self.variables[key]
+
+    def __iter__(self):
+        """
+        Iteration is iterating teh dict of variables
+        """
+        return iter(self.variables)
+
+    def keys(self):
+        return self.variables.keys()
+
+    def values(self):
+        return self.variables.values()
+
+    def items(self):
+        return self.variables.items()
+
+
+
 class ParticleVariable():
     """
     xarray-Variable-like that holds the data associated with the particles
@@ -309,7 +332,6 @@ class ParticleVariable():
         for row in self:
             rep.append(str(list(row.data))[1:-1])
         return "\n".join(rep)
-
 
     def __getitem__(self, indexes):
         # is it multiple indexes?
