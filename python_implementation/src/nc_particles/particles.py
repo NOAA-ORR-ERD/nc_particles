@@ -119,6 +119,22 @@ class Particles():
     def items(self):
         return self.variables.items()
 
+    def to_rectangular(self):
+        """
+        returns an xarray.Dataset that has all the particle data in a
+        "rectangular" format:
+
+        (time, particle)
+
+        Missing data are filled in with _FillValue
+
+        particle_id is a 1D array
+        """
+        # Start with a copy
+        rect_ds = self.dataset.copy()
+
+        # Then replace the arrays
+        raise NotImplementedError
 
 
 class ParticleVariable():
