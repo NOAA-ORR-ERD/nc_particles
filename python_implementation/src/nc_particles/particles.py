@@ -18,6 +18,8 @@ DATA_DIM_NAME = "data"
 class Particles():
     """
     complete set of data with output from a particle tracking model
+    
+    This is "ducked typed" to act like an xarrray dataset.
     """
     DATA_DIM_NAME = "data"
     @classmethod
@@ -130,7 +132,7 @@ class Particles():
 
         particle_id is a 1D array
         """
-        # Start with a copy
+        # Start with a new dataset:
         rect_ds = self.dataset.copy()
 
         # Then replace the arrays
@@ -143,7 +145,7 @@ class ParticleVariable():
 
     """
 
-    def __init__(self, data, row_lengths, particle_ids=None, FillValue=None):
+    def __init__(self, data, row_lengths, particle_ids=None, FillValue=None, attrs=None):
         """
         Initialize a ParticleVariable from existing data.
 
@@ -158,6 +160,8 @@ class ParticleVariable():
                                 when returning a rectangular version. Defalts to
                                 NaN for floats, and maxint for integer types.
 
+        :param attrs=None: attributes associated with the data, e.g. units, etc.
+        :type attrs: Mapping
         """
         data = xr.DataArray(data, dims=('data',))
         if data.ndim != 1:
@@ -176,9 +180,10 @@ class ParticleVariable():
 
         self._particle_ids = xr.DataArray(_particle_ids, dims=('data',))
         self._FillValue = self._get_fill_value(data.dtype) if FillValue is None else FillValue
+        self.attrs = attrs if attrs is not None else {}
 
     @classmethod
-    def from_nested_data(cls, data, *, dtype=np.float64, particle_ids=None, FillValue=None):
+    def from_nested_data(cls, data, *, dtype=np.float64, particle_ids=None, FillValue=None, attrs=None):
         """
         create a ParticleVariable for already nested data:
 
@@ -195,6 +200,10 @@ class ParticleVariable():
         :param particle_ids=None: IDs of particles -- should be same shape as the data.
 
         :param FillValue=None: Fill Value to use when making full arrays from data.
+
+        :param attrs=None: attributes associated with the data, e.g. units, etc.
+        :type attrs: Mapping
+
         """
 
         # unpack the data:
@@ -212,7 +221,7 @@ class ParticleVariable():
                     raise ValueError("particle_ids must be unique")
                 particle_ids_arr.extend(pid)
         data_arr = np.array(data_arr, dtype=dtype)
-        return cls(data_arr, row_lengths, particle_ids_arr, FillValue)
+        return cls(data_arr, row_lengths, particle_ids_arr, FillValue, attrs)
 
     def append_row(self, row, particle_ids=None):
         """
@@ -272,7 +281,11 @@ class ParticleVariable():
         full_arr = np.full((len(self), len(all_ids)), self._FillValue, dtype = self.dtype)
         for idx, id in enumerate(all_ids):
             full_arr[:, idx] = self.get_by_id(id)
-        return all_ids, full_arr
+        full_da = xr.Variable(["time", "particles"],
+                              full_arr,
+                              attrs=self.attrs
+                              )
+        return all_ids, full_da
 
     @staticmethod
     def _get_fill_value(dtype):

@@ -42,6 +42,14 @@ ds = xr.Dataset(
     },
     coords={
         "time": (["time"], time),
-        "num_particles": (["num_particles"], part_id),
+        "particle_ids": (["num_particles"], part_id),
     },
 )
+
+# buiiding it up piece by piece:
+
+attrs = {"a global attribute": "a value",
+             "another one": "something useless"}
+vars = 
+
+
