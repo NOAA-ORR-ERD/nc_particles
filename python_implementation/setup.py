@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name='nc_particles',
-      version='0.1.0',
+      version='1.0.0',
       packages=['nc_particles', 'nc_particles.tests'],
       requires=['numpy', 'netCDF4'],   # want other packages here?
       # metadata for upload to PyPI

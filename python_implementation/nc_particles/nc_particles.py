@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-# for py2/3 compatibility
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-
 """
 Module for manipulating netcdf (and other) particle files
 
@@ -13,7 +9,6 @@ CF standard (or SOME standard..)
 
 """
 
-from __future__ import division
 from datetime import datetime
 
 import numpy as np
@@ -85,6 +80,7 @@ SPECIAL_VARIABLES = ['time','particle_count']
 
 
 class Writer(object):
+    nc = None  # so the attribute will always be there.
     def __init__ (self,
                   filename,
                   num_timesteps=None,
@@ -199,7 +195,7 @@ class Writer(object):
             if self.ref_time is None:
                 self.ref_time = timestamp
             nc.variables['time'].units = 'seconds since {0}'.format(self.ref_time.isoformat())
-            for key, val in data.iteritems():
+            for key, val in data.items():
                 val = np.asarray(val)
                 var = nc.createVariable(key, datatype=val.dtype, dimensions=('data'))
                 # if it's a standard variable, add the attributes
@@ -207,11 +203,11 @@ class Writer(object):
                     for name, value in self.var_attributes[key].items():
                         var.setncattr(name, value)
 
-        particle_count = len(data.itervalues().next())  # length of an arbitrary array
+        particle_count = len(next(iter(data.values())))  # length of an arbitrary array
         nc.variables['particle_count'][self.current_timestep] = particle_count
         nc.variables['time'][self.current_timestep] = (timestamp - self.ref_time).total_seconds()
         self.current_timestep += 1
-        for key, val in data.iteritems():
+        for key, val in data.items():
             var = nc.variables[key]
             if len(val) != particle_count:
                 raise ValueError("All data arrays must be the same length")
@@ -222,23 +218,25 @@ class Writer(object):
         """
         close the netcdf file
         """
-        try:
-            self.nc.close()
-        except RuntimeError:
-            # just in case it isn't still open
-            pass
+        if self.nc is not None:  # in case it hasn't been intialized properly
+            try:
+                self.nc.close()
+            except RuntimeError:
+                # just in case it isn't still open
+                pass
 
     def __del__(self):
         """ make sure to close the netcdf file """
         self.close()
 
 
-class Reader(object):
+class Reader():
     """
     Class to handle reading a nc_particle file
 
     (such as those written by GNOME or the Writer class above)
     """
+    nc = None  # so the attribute will always be there.
     def __init__(self, nc_file):
         """
         initialize a file reader.
@@ -354,13 +352,15 @@ class Reader(object):
         """
         close the netcdf file
         """
-        try:
-            self.nc.close()
-            print ("netcdf file closed")
-        except RuntimeError:
-            # just in case it isn't still open
-            pass
+        if self.nc is not None: # in case it hasn't been properly initialized
+            try:
+                self.nc.close()
+                print ("netcdf file closed")
+            except RuntimeError:
+                # just in case it isn't still open
+                pass
 
     def __del__(self):
         """ make sure to close the netcdf file """
         self.close()
+
