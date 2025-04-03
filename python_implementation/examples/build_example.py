@@ -3,7 +3,7 @@
 """
 A script to build a little example netcdf file for the nc_particles format
 
-This also serves as an example of how to use the code.
+This also serves as an example of how to use the Writer code.
 """
 
 import numpy as np
@@ -11,7 +11,7 @@ import datetime
 import nc_particles
 
 ## crate the nc file writer
-nc_file = nc_particles.Writer("sample.nc",
+nc_file = nc_particles.Writer("example.nc",
                               num_timesteps=3, # must specify if netcdf3
                               ref_time=datetime.datetime(2010, 11, 1, 0) # ref time for the time variable
                               )
@@ -66,6 +66,7 @@ for timestep in all_data:
     data['mass'] = timestep['mass']
     data['id'] = timestep['id']
     nc_file.write_timestep(timestep['time'], data)
+
 nc_file.close()
 
 
