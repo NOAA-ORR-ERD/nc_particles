@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 
 """
-Module for manipulating netcdf (and other) particle files
+Module for manipulating netcdf particle files
+
+This code used the netCDF4 library, rather than xarray, 
+and provides "Reader" and "Writer" classes to read and write the files.
+
+This may be deprecated in the future, but it works, and it a bit simpler.
 
 This is useful for working with particle file output from GNOME,
 and is a test case for working with what hopefully will be a
 CF standard (or SOME standard..)
-
 """
 
 from datetime import datetime
