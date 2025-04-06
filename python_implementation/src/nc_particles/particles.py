@@ -48,7 +48,7 @@ class Particles():
         self = cls.__new__(cls)
         self.dataset = dataset  # keep a reference to the dataset
 
-        self.times = dataset['time']
+        self.time = dataset['time']
         time_dim = dataset.time.dims[0]
         if particle_count_var is not None:
             self._particle_count = dataset.variables[particle_count_var]
@@ -90,11 +90,13 @@ class Particles():
             if var.name in {self._particle_id.name, self._particle_count.name}:
                 continue
             if var.dims == (data_dim,):
-                self.variables[var.name] = ParticleVariable(var,
-                                                            self._particle_count,
-                                                            self._particle_id,)
+                self.variables[var.name] = ParticleVariable(data=var,
+                                                            row_lengths=self._particle_count,
+                                                            particle_ids=self._particle_id,
+                                                            time=self.time,
+                                                            )
 
-        # self.data_index = np.zeros((len(self.times) + 1,), dtype=np.int32)
+        # self.data_index = np.zeros((len(self.time) + 1,), dtype=np.int32)
         # self.data_index[1:] = np.cumsum(self.particle_count)
         # self.global_atttributes = {name: self.nc.getncattr(name) for name in self.nc.ncattrs()}
 
@@ -145,7 +147,7 @@ class ParticleVariable():
 
     """
 
-    def __init__(self, data, row_lengths, particle_ids=None, FillValue=None, attrs=None):
+    def __init__(self, data, row_lengths, time=None, particle_ids=None, FillValue=None, attrs=None, name=''):
         """
         Initialize a ParticleVariable from existing data.
 
@@ -168,6 +170,9 @@ class ParticleVariable():
             raise ValueError("input data array should be one dimensional.")
         if sum(row_lengths) != len(data):
             raise ValueError("``sum(row_lengths)`` must equal len(data).")
+        if time is not None and len(row_lengths) != len(time):
+            raise ValueError("number of rows must equal number of times")
+        self._time = time
         self._data_array = data
         self._start_indexes = np.zeros((len(row_lengths) + 1,), dtype=np.int32)
         self._start_indexes[1:] = np.cumsum(row_lengths)
@@ -181,6 +186,7 @@ class ParticleVariable():
         self._particle_ids = xr.DataArray(_particle_ids, dims=('data',))
         self._FillValue = self._get_fill_value(data.dtype) if FillValue is None else FillValue
         self.attrs = attrs if attrs is not None else {}
+        self.name = name
 
     @classmethod
     def from_nested_data(cls, data, *, dtype=np.float64, particle_ids=None, FillValue=None, attrs=None):
@@ -221,7 +227,11 @@ class ParticleVariable():
                     raise ValueError("particle_ids must be unique")
                 particle_ids_arr.extend(pid)
         data_arr = np.array(data_arr, dtype=dtype)
-        return cls(data_arr, row_lengths, particle_ids_arr, FillValue, attrs)
+        return cls(data=data_arr,
+                   row_lengths=row_lengths,
+                   particle_ids=particle_ids_arr,
+                   FillValue=FillValue,
+                   attrs=attrs)
 
     def append_row(self, row, particle_ids=None):
         """
@@ -281,10 +291,19 @@ class ParticleVariable():
         full_arr = np.full((len(self), len(all_ids)), self._FillValue, dtype = self.dtype)
         for idx, id in enumerate(all_ids):
             full_arr[:, idx] = self.get_by_id(id)
-        full_da = xr.Variable(["time", "particles"],
-                              full_arr,
-                              attrs=self.attrs
-                              )
+        coords = {"time": self._time,
+                  "particles": all_ids}
+        # full_da = xr.Variable(["time", "particles"],
+        #                       full_arr,
+        #                       attrs=self.attrs
+        #                       )
+        full_da = xr.DataArray(data=full_arr,
+                                   coords=coords,
+                                   dims=None, # should figure it out?
+                                   name=self.name,  # give it a name?
+                                   attrs=self.attrs,
+                                   indexes=None,
+                                   fastpath=False)
         return all_ids, full_da
 
     @staticmethod

@@ -50,7 +50,9 @@ def test_from_nested_data():
             [5, 6, 7],
             ]
 
-    ra = ParticleVariable.from_nested_data(data, particle_ids=pids, dtype=np.float32)
+    ra = ParticleVariable.from_nested_data(data,
+                                           particle_ids=pids,
+                                           dtype=np.float32)
 
     # print(f"{ra._start_indexes=}")
 
@@ -193,7 +195,7 @@ def test_get_by_id():
     particle_data = ra.get_by_id(7)
     assert np.array_equal(particle_data, [np.nan, np.nan, 11, 14], equal_nan=True)
 
-def test_get_full_array():
+def test_as_full_array():
     """
     Returns a full array, matching the particle IDs, and
     filling the missing values with FillValue
@@ -234,12 +236,12 @@ def test_init_particles_from_dataset():
 
     parts = Particles.from_dataset(ds)
 
-    # print(parts.times)
+    # print(parts.time)
 
-    # print(f"{parts.times[0]=}")
-    # print(f"{type(parts.times[0])}")
+    # print(f"{parts.time[0]=}")
+    # print(f"{type(parts.time[0])}")
 
-    assert parts.times.shape == (3,)
+    assert parts.time.shape == (3,)
 
     assert parts.variables.keys() == {'latitude', 'depth', 'mass', 'longitude'}
 
