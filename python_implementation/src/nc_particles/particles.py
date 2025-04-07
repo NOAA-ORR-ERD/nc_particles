@@ -38,18 +38,30 @@ class Particles():
                      dataset,
                      particle_count_var=None,
                      id_var=None,
+                     time_var=None
                      ):
         """
         Create a Particles object from an xarray Dataset
         in nc_particles format
+
+        :param dataset: The xarray dataset to use
+
+        :param particle_count_var: the name of the variable that
+                                   provides the particle count
+                                   (length of each row)
+
+        :param id_var: name of variable that provides the particle IDs
+        :param time_var: name of time variable
         """
         data_dim = DATA_DIM_NAME
 
         self = cls.__new__(cls)
         self.dataset = dataset  # keep a reference to the dataset
 
-        self.time = dataset['time']
+        time_var = 'time' if time_var is None else time_var
+        self.time = dataset[time_var]
         time_dim = dataset.time.dims[0]
+
         if particle_count_var is not None:
             self._particle_count = dataset.variables[particle_count_var]
         else:
@@ -298,12 +310,12 @@ class ParticleVariable():
         #                       attrs=self.attrs
         #                       )
         full_da = xr.DataArray(data=full_arr,
-                                   coords=coords,
-                                   dims=None, # should figure it out?
-                                   name=self.name,  # give it a name?
-                                   attrs=self.attrs,
-                                   indexes=None,
-                                   fastpath=False)
+                               coords=coords,
+                               dims=None, # should figure it out?
+                               name=self.name,  # give it a name?
+                               attrs=self.attrs,
+                               indexes=None,  # not sure what these are
+                               fastpath=False)
         return all_ids, full_da
 
     @staticmethod

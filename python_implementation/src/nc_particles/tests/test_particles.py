@@ -252,6 +252,10 @@ def test_init_particles_from_dataset():
     assert lat.shape == (3, 4)
     assert lat.dtype == np.float64
 
+    print(parts.time)
+
+    assert False
+
 def test_getitem():
     """
     should be able to index by variable name
