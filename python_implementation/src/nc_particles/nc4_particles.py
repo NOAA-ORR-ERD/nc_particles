@@ -21,7 +21,7 @@ import netCDF4
 
 ## default attributes -- can be updated by user later.
 
-file_attributes = {'conventions' : "CF-1.6",
+file_attributes = {'conventions' : "CF-1.12",
                    'title' : "Sample data/file for particle trajectory format",
                    'institution' : "NOAA Emergency Response Division",
                    'source' : "example data from nc_particles",
@@ -37,9 +37,8 @@ file_attributes = {'conventions' : "CF-1.6",
 
 var_attributes = {'time': {'long_name':'time since the beginning of the simulation',
                            'standard_name':'time',
-                           'calendar':'gregorian',
+                           'calendar':'standard',
                            'standard_name':'time',
-                           'comment':'unspecified time zone',
                            # units will get set based on data
                             },
                   'particle_count': {'units':'1',
@@ -234,7 +233,7 @@ class Writer(object):
         self.close()
 
 
-class Reader():
+class Reader:
     """
     Class to handle reading a nc_particle file
 
@@ -276,11 +275,15 @@ class Reader():
         """
         return [var for var in self.nc.variables.keys() if var not in SPECIAL_VARIABLES]
 
+    def __repr__(self):
+        return f'Reader("{self.nc.filepath()}")'
+
     def __str__(self):
         return ("nc_particles Reader object:\n"
-                "variables: {}\n"
-                "number of timesteps: {}\n"
-                ).format(self.variables, len(self.times))
+                f"File path: {self.nc.filepath()}\n"
+                f"variables: {self.variables}\n"
+                f"number of timesteps: {len(self.times)}\n"
+                )
 
     def get_all_timesteps(self, variables=['latitude', 'longitude']):
         """
@@ -293,8 +296,8 @@ class Reader():
 
         :returns data: returns a dict of arrays -- the keys are the
                        variable names, and the values are numpy arrays
-                        of the data. The arrays are the flattened ragged
-                        array of data.
+                       of the data. The arrays are the flattened ragged
+                       array of data.
         """
         data = {}
         for var in variables:

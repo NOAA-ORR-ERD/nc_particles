@@ -1,9 +1,14 @@
 """
 test to see what can be done with ragged
 """
+import pytest
+
+pytestmark = pytest.mark.skipif(True, reason="This is only experimental code")
+
 import numpy as np
 import xarray as xr
 import ragged
+
 
 data = [[1, 2, 3, 4],
         [5, 6],
