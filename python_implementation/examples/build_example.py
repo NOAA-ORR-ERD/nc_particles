@@ -105,4 +105,4 @@ def build_rect_file(filename):
 
 if __name__ == "__main__":
     build_nc_part_file("example.nc")
-#     build_rect_file("rect_example.nc")
+    build_rect_file("rect_example.nc")
