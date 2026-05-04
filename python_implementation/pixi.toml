@@ -1,0 +1,30 @@
+[workspace]
+authors = ["Chris Barker <chris.barker@noaa.gov>"]
+channels = ["conda-forge"]
+name = "nc_particles"
+platforms = ["win-64", "linux-64", "osx-arm64"]
+version = "0.1.0"
+
+[pypi-dependencies]
+nc_particles = { path = ".", editable = true }
+
+[dependencies]
+python = ">=3.11,<3.15"
+xarray = "*"
+netcdf4 = "*"
+
+[feature.py311.dependencies]
+python = "3.11.*"
+
+[feature.py312.dependencies]
+python = "3.12.*"
+
+[feature.py313.dependencies]
+python = "3.13.*"
+
+[feature.py314.dependencies]
+python = "3.14.*"
+
+[tasks]
+test = "pytest --pyargs nc_particles"
+

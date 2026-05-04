@@ -86,7 +86,8 @@ def build_rect_file(filename):
                  'mass']
 
         for name in names:
-            ncds.createVariable(name, datatype=np.float64,
+            ncds.createVariable(name,
+                                datatype=np.float64,
                                 dimensions=('time', 'particle_id'),
                                 fill_value=np.nan)
 
