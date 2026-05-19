@@ -61,7 +61,46 @@ def test_from_nested_data():
     # testing interenal structure -- but what can you do?
     for row1, row2 in zip(data, ra):
         assert np.array_equal(row1, row2)
-    assert np.array_equal(ra._particle_ids, [1, 2, 3, 4, 2, 4, 2, 4, 5, 6, 7, 5, 6, 7])
+    assert np.array_equal(ra._particle_ids,
+                          [1, 2, 3, 4, 2, 4, 2, 4, 5, 6, 7, 5, 6, 7])
+
+
+def test_from_nested_data_duplicate_id():
+    data = [[1, 2, 3, 4],
+            [5, 6],
+            [7, 8, 9, 10, 11],
+            [12, 13, 14],
+            ]
+    pids = [[1, 2, 3, 4],
+            [2, 4],
+            [2, 4, 5, 6, 7],
+            [5, 6, 6],
+            ]
+    with pytest.raises(ValueError):
+        ra = ParticleVariable.from_nested_data(data,
+                                               particle_ids=pids,
+                                               dtype=np.float32)
+
+def test_from_nested_data_no_ids():
+    data = [[1, 2, 3, 4],
+            [5, 6],
+            [7, 8, 9, 10, 11],
+            [12, 13, 14],
+            ]
+    pids = [[1, 2, 3, 4],
+            [2, 4],
+            [2, 4, 5, 6, 7],
+            [5, 6, 6],
+            ]
+    # with pytest.raises(ValueError):
+    pv = ParticleVariable.from_nested_data(data)#,
+                                           # particle_ids=pids,
+                                           # dtype=np.float32)
+
+    assert np.array_equal(pv._particle_ids,
+                          [0, 1, 2, 3, 0, 1, 0, 1, 2, 3, 4, 0, 1, 2])
+
+
 
 def test_append_row():
     data = [[1, 2, 3, 4],
@@ -87,6 +126,37 @@ def test_append_row():
         assert np.array_equal(row1, row2)
 
     assert np.array_equal(ra._particle_ids, [1, 2, 3, 4, 2, 4, 2, 4, 5, 6, 7, 5, 6, 7, 5, 7, 8, 9, 10])
+
+def test_append_row_no_ids():
+    data = [[1, 2, 3, 4],
+            [5, 6],
+            [7, 8, 9, 10, 11],
+            [12, 13, 14],
+            ]
+    pids = [[1, 2, 3, 4],
+            [2, 4],
+            [2, 4, 5, 6, 7],
+            [5, 6, 7],
+            ]
+
+    ra = ParticleVariable.from_nested_data(data, particle_ids=pids, dtype=np.float32)
+
+    row = [15, 16, 17, 18, 19]
+
+    ra.append_row(row)
+    ids = [0, 1, 2, 3, 4]  # ids will fill in left aligned if not provided
+    data.append(row)
+    pids.append(ids)
+    for row1, row2 in zip(data, ra):
+        assert np.array_equal(row1, row2)
+
+    assert np.array_equal(ra._particle_ids, [1, 2, 3, 4, 2, 4, 2, 4, 5, 6, 7, 5, 6, 7, 0, 1, 2, 3, 4])
+
+    # non-unique
+    ids = [0, 1, 2, 3, 3] 
+    with pytest.raises(ValueError, match="particle_ids must be unique"):
+        ra.append_row(row, ids)    
+
 
 def test__array__():
     """
@@ -144,6 +214,21 @@ def test_str():
 1 1 1 1 1
 1 1
 1 1 1 1 1 1 1"""
+
+def test__repr__():
+    rows = [3, 5, 2, 7]
+    ra = ParticleVariable.ones(rows, dtype=np.int32)
+
+    string = repr(ra)
+
+    print("string:")
+    print(string)
+
+    assert string == """ParticleVariable:
+[1 1 1]
+[1 1 1 1 1]
+[1 1]
+[1 1 1 1 1 1 1]"""
 
 def test_iteration():
     rows = [3, 5, 2, 7]
@@ -235,6 +320,29 @@ def test_as_full_array():
     assert np.array_equal(full, full_data, equal_nan=True)
 
 
+def test_ParticleVariable_get_item():
+    data = [[1, 2, 3, 4],
+            [5, 6],
+            [7, 8, 9, 10, 11],
+            [12, 13, 14],
+            ]
+    pids = [[1, 2, 3, 4],
+            [2, 4],
+            [2, 4, 5, 6, 7],
+            [5, 6, 7],
+            ]
+
+    pv = ParticleVariable.from_nested_data(data, particle_ids=pids, dtype=np.float32)
+
+    # 1D indexing (getting a row)
+    FV = pv._FillValue
+    assert np.array_equal(pv[0], [1, 2, 3, 4])
+    assert np.array_equal(pv[1], [FV, 5, FV, 6])
+
+    # 2D indexing
+    assert pv[1, 1] == 5
+
+
 # tests of the Particles class
 def test_init_particles_from_dataset():
     '''
@@ -255,14 +363,60 @@ def test_init_particles_from_dataset():
     assert lat.shape == (3, 4)
     assert lat.dtype == np.float64
 
-def test_init_particles_from_dataset_missing():
+
+def test_init_particles_from_dataset_set_pc_var():
     '''
     Tests that you can initialize from an xarray dataset
     '''
     ds = xr.open_dataset(sample_file)
+    parts = Particles.from_dataset(ds, particle_count_var='particle_count')
 
-    with pytest.raises(ZeroDivisionError):
+    assert parts.time.shape == (3,)
+
+    assert parts.variables.keys() == {'latitude', 'depth', 'mass', 'longitude'}
+
+    # check variables
+    lat = parts.variables['latitude']
+    print(f"{type(lat)}")
+    assert len(lat) == 3
+    assert lat.shape == (3, 4)
+    assert lat.dtype == np.float64
+
+
+def test_init_particles_from_dataset_missing_pc():
+    '''
+    Tests that you can initialize from an xarray dataset
+    '''
+    ds = xr.open_dataset(sample_file)
+#    del ds['particle_count'].attrs['ragged_row_count']
+    del ds['particle_count']
+    with pytest.raises(ValueError):
         parts = Particles.from_dataset(ds)
+
+
+def test_init_particles_from_dataset_specify_id():
+    '''
+    Tests that you can initialize from an xarray dataset
+    '''
+    ds = xr.open_dataset(sample_file)
+    parts = Particles.from_dataset(ds, id_var='id')
+
+    lat = parts.variables['latitude']
+    assert len(lat) == 3
+    assert lat.shape == (3, 4)
+    assert lat.dtype == np.float64
+
+
+def test_init_particles_from_dataset_missing_id():
+    '''
+    Tests that you can initialize from an xarray dataset
+    '''
+    ds = xr.open_dataset(sample_file)
+    del ds['id']
+    print(ds)
+    with pytest.raises(ValueError):
+        parts = Particles.from_dataset(ds)
+
 
 
 def test_getitem():

@@ -63,7 +63,7 @@ class Particles():
         time_dim = dataset.time.dims[0]
 
         if particle_count_var is not None:
-            self._particle_count = dataset.variables[particle_count_var]
+            self._particle_count = dataset[particle_count_var]
         else:
             # find particle_count variable
             for var in dataset.data_vars.values():
@@ -79,8 +79,9 @@ class Particles():
                                      "input file does not have a particle_count variable."
                                      )
         # find the id variable
+        self._particle_id = None
         if id_var is not None:
-            self._particle_id = dataset.variables[id_var]
+            self._particle_id = dataset[id_var]
         else:
             for var in dataset.data_vars.values():
                 if var.attrs['long_name'] == "particle ID":
@@ -156,7 +157,6 @@ class Particles():
 class ParticleVariable():
     """
     xarray-Variable-like that holds the data associated with the particles
-
     """
 
     def __init__(self, data, row_lengths, time=None, particle_ids=None, FillValue=None, attrs=None, name=''):
@@ -169,6 +169,7 @@ class ParticleVariable():
                of the data array.
         :param particle_ids=None: IDs of the particles, so that you can track
                                   a particular particle. should be the same size and data.
+                                  If None, IDs will be assigned assuming data are left-aligned.
 
         :param FillValue=None: value to use to fill the empty parts of the array
                                 when returning a rectangular version. Defalts to
@@ -258,7 +259,7 @@ class ParticleVariable():
         """
         row = xr.DataArray(row, dims=('data',))
         if particle_ids is None:
-            particle_ids = np.range(len(row), dtype=np.int32)
+            particle_ids = np.arange(len(row), dtype=np.int32)
         else:
             particle_ids = np.array(particle_ids, dtype=np.int32)
         if len(np.unique(particle_ids)) != len(particle_ids):
@@ -400,8 +401,11 @@ class ParticleVariable():
     def __getitem__(self, indexes):
         # is it multiple indexes?
         if isinstance(indexes, tuple):
+            raise NotImplementedError("get item is not implmented for 2D indexing")
             time_ind = indexes[0]
             particle_index = indexes[1]
+            row_ids = self._particle_ids[self._start_indexes[time_ind] : self._start_indexes[time_ind + 1]]
+            
         else:
             try:
                 ind = indexes.__index__()
