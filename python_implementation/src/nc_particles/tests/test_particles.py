@@ -1,7 +1,7 @@
 """
 tests for particles
 """
-
+from datetime import datetime, timedelta
 from pathlib import Path
 import numpy as np
 import xarray as xr
@@ -136,13 +136,14 @@ def test_str():
 
     string = str(ra)
 
+    print("string:")
     print(string)
 
     assert string == """ParticleVariable:
-1, 1, 1
-1, 1, 1, 1, 1
-1, 1
-1, 1, 1, 1, 1, 1, 1"""
+1 1 1
+1 1 1 1 1
+1 1
+1 1 1 1 1 1 1"""
 
 def test_iteration():
     rows = [3, 5, 2, 7]
@@ -166,13 +167,20 @@ def test_init_from_bad_data():
     init should raise if data wrong
     """
     rows = [3, 5, 2, 8]
+    # data array too small (substracted one)
     data = np.arange(sum(rows) - 1)
     with pytest.raises(ValueError):
         ra = ParticleVariable(data, rows)
 
-    data = data = np.arange(sum(rows)).reshape((-1, 2))
+    # data array wrong shape
+    data = np.arange(sum(rows)).reshape((-1, 2))
     with pytest.raises(ValueError):
         ra = ParticleVariable(data, rows)
+    # time var doesn't match
+    data = np.arange(sum(rows))
+    time = [datetime.now() + timedelta(hours=i) for i in range(len(rows) + 1)]
+    with pytest.raises(ValueError):
+        ra = ParticleVariable(data, rows, time=time)
 
 
 def test_get_by_id():
@@ -236,11 +244,6 @@ def test_init_particles_from_dataset():
 
     parts = Particles.from_dataset(ds)
 
-    # print(parts.time)
-
-    # print(f"{parts.time[0]=}")
-    # print(f"{type(parts.time[0])}")
-
     assert parts.time.shape == (3,)
 
     assert parts.variables.keys() == {'latitude', 'depth', 'mass', 'longitude'}
@@ -251,8 +254,16 @@ def test_init_particles_from_dataset():
     assert len(lat) == 3
     assert lat.shape == (3, 4)
     assert lat.dtype == np.float64
-    
-    print(parts.time)
+
+def test_init_particles_from_dataset_missing():
+    '''
+    Tests that you can initialize from an xarray dataset
+    '''
+    ds = xr.open_dataset(sample_file)
+
+    with pytest.raises(ZeroDivisionError):
+        parts = Particles.from_dataset(ds)
+
 
 def test_getitem():
     """

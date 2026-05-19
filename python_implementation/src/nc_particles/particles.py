@@ -177,9 +177,13 @@ class ParticleVariable():
         :param attrs=None: attributes associated with the data, e.g. units, etc.
         :type attrs: Mapping
         """
-        data = xr.DataArray(data, dims=('data',))
-        if data.ndim != 1:
-            raise ValueError("input data array should be one dimensional.")
+        try:
+            data = xr.DataArray(data, dims=('data',))
+        except ValueError as err:
+            if "different number of dimensions" in err.args[0]:
+                raise ValueError("input data array should be one dimensional.")
+            else:
+                raise err
         if sum(row_lengths) != len(data):
             raise ValueError("``sum(row_lengths)`` must equal len(data).")
         if time is not None and len(row_lengths) != len(time):
@@ -390,7 +394,7 @@ class ParticleVariable():
     def __str__(self):
         rep = ["ParticleVariable:"]
         for row in self:
-            rep.append(str(list(row.data))[1:-1])
+            rep.append(str(row.data)[1:-1])
         return "\n".join(rep)
 
     def __getitem__(self, indexes):
