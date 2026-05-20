@@ -18,6 +18,7 @@ import nc_particles
 HERE = Path(__file__).parent
 OUTPUT = Path(__file__).parent / "output"
 
+
 def test_init():
     """
     Can the classes be intitialized?
@@ -38,7 +39,8 @@ def test_netcdf3():
     w = nc_particles.Writer(OUTPUT / 'junk_file.nc', num_timesteps=10, nc_version='3')
     w.close()
     nc = netCDF4.Dataset(OUTPUT / 'junk_file.nc')
-    assert nc.file_format=='NETCDF3_CLASSIC'
+    assert nc.file_format == 'NETCDF3_CLASSIC'
+
 
 def test_netcdf4():
     w = nc_particles.Writer(OUTPUT / 'junk_file.nc', num_timesteps=10, nc_version=4)

@@ -196,14 +196,33 @@ class ParticleVariable():
         if particle_ids is None:
             _particle_ids = np.zeros((len(data)), dtype=np.int32)
             for idx, rl in zip(self._start_indexes, row_lengths):
-                _particle_ids[idx:idx+rl] = range(rl)
+                _particle_ids[idx:idx + rl] = range(rl)
         else:
             _particle_ids = np.array(particle_ids, dtype=np.int32)
 
         self._particle_ids = xr.DataArray(_particle_ids, dims=('data',))
-        self._FillValue = self._get_fill_value(data.dtype) if FillValue is None else FillValue
+        self._FillValue = (self._get_fill_value(data.dtype)
+                           if FillValue is None else FillValue)
+        self._id_row_index = self._build_id_index(self._particle_ids)
         self.attrs = attrs if attrs is not None else {}
         self.name = name
+
+    @staticmethod
+    def _build_id_index(ids):
+        """
+        builds the index of IDs to column numbers
+
+        preserves the order of the IDs
+
+        (neccesary? maybe not, but seems like a good UI)
+        """
+        ids = np.asarray(ids)
+        vals, idx = np.unique(ids, sorted=True, return_index=True)
+        unique_ids = vals[np.argsort(idx)]
+
+        id_index = {idx: j for j, idx in enumerate(unique_ids)}
+
+        return id_index
 
     @classmethod
     def from_nested_data(cls, data, *, dtype=np.float64, particle_ids=None, FillValue=None, attrs=None):
