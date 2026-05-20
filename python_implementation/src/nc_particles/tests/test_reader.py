@@ -1,10 +1,7 @@
-import os
-import datetime
 from pathlib import Path
 import gc
 
 
-import pytest
 import numpy as np
 import netCDF4
 import nc_particles

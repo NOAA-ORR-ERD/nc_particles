@@ -16,6 +16,31 @@ OUTPUT = HERE / 'temp_output'
 sample_file = HERE / "sample_data" / "sample.nc"
 
 
+def small_data_example():
+    """
+    example of ragged data.
+
+    full form:
+    ID:
+    1,  2,  3,  4,  5,  6,  7
+    Data
+    1,  2,  3,  4,  -,  -,  -
+    -,  5,  -,  6,  -,  -,  -
+    -,  7,  -,  8,  9, 10, 11
+    -,  -,  -,  -, 12, 13, 14
+    """
+    data = [[1, 2, 3, 4],
+            [5, 6],
+            [7, 8, 9, 10, 11],
+            [12, 13, 14],
+            ]
+    pids = [[1, 2, 3, 4],
+            [2, 4],
+            [2, 4, 5, 6, 7],
+            [5, 6, 7],
+            ]
+    return data, pids
+
 def test_construction():
     """
     using internal representation, but what can you do?
@@ -77,7 +102,7 @@ def test_from_nested_data_duplicate_id():
             [5, 6, 6],
             ]
     with pytest.raises(ValueError):
-        ra = ParticleVariable.from_nested_data(data,
+        ra = ParticleVariable.from_nested_data(data,  # noqa:F841
                                                particle_ids=pids,
                                                dtype=np.float32)
 
@@ -87,11 +112,11 @@ def test_from_nested_data_no_ids():
             [7, 8, 9, 10, 11],
             [12, 13, 14],
             ]
-    pids = [[1, 2, 3, 4],
-            [2, 4],
-            [2, 4, 5, 6, 7],
-            [5, 6, 6],
-            ]
+    # pids = [[1, 2, 3, 4],
+    #         [2, 4],
+    #         [2, 4, 5, 6, 7],
+    #         [5, 6, 6],
+    #         ]
     # with pytest.raises(ValueError):
     pv = ParticleVariable.from_nested_data(data)#,
                                            # particle_ids=pids,
@@ -265,7 +290,7 @@ def test_init_from_bad_data():
     data = np.arange(sum(rows))
     time = [datetime.now() + timedelta(hours=i) for i in range(len(rows) + 1)]
     with pytest.raises(ValueError):
-        ra = ParticleVariable(data, rows, time=time)
+        ra = ParticleVariable(data, rows, time=time)  # noqa:F841
 
 
 def test_get_by_id():
@@ -319,20 +344,19 @@ def test_as_full_array():
     assert np.array_equal(f_pids, full_pid)
     assert np.array_equal(full, full_data, equal_nan=True)
 
+def test_particle_variable_build_index():
+    """
+    check the index of ID to column
+
+    note: this is an implementation test, maybe not keep it
+    """
+
 
 def test_ParticleVariable_get_item():
-    data = [[1, 2, 3, 4],
-            [5, 6],
-            [7, 8, 9, 10, 11],
-            [12, 13, 14],
-            ]
-    pids = [[1, 2, 3, 4],
-            [2, 4],
-            [2, 4, 5, 6, 7],
-            [5, 6, 7],
-            ]
+    data, pids = small_data_example()
 
-    pv = ParticleVariable.from_nested_data(data, particle_ids=pids, dtype=np.float32)
+    pv = ParticleVariable.from_nested_data(data,
+                                           particle_ids=pids, dtype=np.float32)
 
     # 1D indexing (getting a row)
     FV = pv._FillValue
@@ -391,7 +415,7 @@ def test_init_particles_from_dataset_missing_pc():
 #    del ds['particle_count'].attrs['ragged_row_count']
     del ds['particle_count']
     with pytest.raises(ValueError):
-        parts = Particles.from_dataset(ds)
+        parts = Particles.from_dataset(ds)  # noqa:F841
 
 
 def test_init_particles_from_dataset_specify_id():
@@ -415,7 +439,7 @@ def test_init_particles_from_dataset_missing_id():
     del ds['id']
     print(ds)
     with pytest.raises(ValueError):
-        parts = Particles.from_dataset(ds)
+        parts = Particles.from_dataset(ds)  # noqa:F841
 
 
 

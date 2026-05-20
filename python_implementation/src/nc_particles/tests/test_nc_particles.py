@@ -9,11 +9,9 @@ Designed to be run with pytest
 """
 
 import os
-import datetime
 from pathlib import Path
 
 import pytest
-import numpy as np
 import netCDF4
 import nc_particles
 
@@ -33,7 +31,7 @@ def test_init():
 
 def test_3_unlimited():
     with pytest.raises(ValueError):
-        w = nc_particles.Writer(OUTPUT / 'junk_file.nc', nc_version=3)
+        w = nc_particles.Writer(OUTPUT / 'junk_file.nc', nc_version=3)  # noqa:F841
 
 
 def test_netcdf3():
@@ -50,11 +48,11 @@ def test_netcdf4():
 
 def test_netcdf_wrong():
     with pytest.raises(ValueError):
-        w = nc_particles.Writer(OUTPUT / 'junk_file.nc', nc_version='nc4')
+        w = nc_particles.Writer(OUTPUT / 'junk_file.nc', nc_version='nc4')  # noqa:F841
 
 def test_netcdf_wrong_num():
     with pytest.raises(ValueError):
-        w = nc_particles.Writer(OUTPUT / 'junk_file.nc', nc_version='5')
+        w = nc_particles.Writer(OUTPUT / 'junk_file.nc', nc_version='5')  # noqa:F841
 
 
 def test_multi_close():

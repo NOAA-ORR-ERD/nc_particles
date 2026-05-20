@@ -66,5 +66,5 @@ def test_write_timestep_wrong_size():
 #     w.close()
 #     w.close()
 
-if __name__ == "__main__":
-    test_multi_close()
+# if __name__ == "__main__":
+#     test_multi_close()
