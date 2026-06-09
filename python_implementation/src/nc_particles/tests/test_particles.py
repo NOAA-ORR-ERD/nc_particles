@@ -1,8 +1,10 @@
 """
-tests for particles
+Tests for particles
 """
 from datetime import datetime, timedelta
 from pathlib import Path
+from math import nan
+
 import numpy as np
 import xarray as xr
 import pytest
@@ -20,26 +22,46 @@ def small_data_example():
     """
     example of ragged data.
 
-    full form:
-    ID:
-    1,  2,  3,  4,  5,  6,  7
-    Data
-    1,  2,  3,  4,  -,  -,  -
-    -,  5,  -,  6,  -,  -,  -
-    -,  7,  -,  8,  9, 10, 11
-    -,  -,  -,  -, 12, 13, 14
+    Discontinuous
+    IDs are arbitrary: non-monotonically increasing
+
     """
+    IDs = [17,  12,  3,  11,  13,  18,  5]
+
+    full_form = [
+        [   1,   2,    3,    4, nan, nan, nan ],
+        [ nan,   5,  nan,    6, nan, nan, nan ],
+        [ nan,   7,  nan,    8,   9,  10,  11 ],
+        [ nan, nan,  nan,  nan,  12,  13,  14 ],
+         ]
+
     data = [[1, 2, 3, 4],
             [5, 6],
             [7, 8, 9, 10, 11],
             [12, 13, 14],
             ]
-    pids = [[1, 2, 3, 4],
-            [2, 4],
-            [2, 4, 5, 6, 7],
-            [5, 6, 7],
+    pids = [[17, 12, 3, 11],
+            [12, 11],
+            [12, 17, 13, 18, 5],
+            [13, 18, 5],
             ]
-    return data, pids
+    return data, pids, IDs, full_form  # = small_data_example()
+
+def small_data_example_full_variable():
+    """
+    Example of the same array, but in full xarray Variable form
+
+    i.e with FillValue for the empty slots.
+
+    Discontinuous
+    IDs are arbitrary: non-monotonically increasing
+
+    """
+    data, pids, IDs, full_form = small_data_example()
+    full_var = xr.Variable(('time', 'pid'), full_form)
+
+    return full_var
+
 
 def test_construction():
     """
@@ -182,6 +204,17 @@ def test_append_row_no_ids():
     with pytest.raises(ValueError, match="particle_ids must be unique"):
         ra.append_row(row, ids)    
 
+def test_shape():
+    # make sure shape works for "wonky" IDs
+    data, pids, IDs, full_form = small_data_example()
+
+    pv = ParticleVariable.from_nested_data(data, pids)
+
+    print(pv)
+
+    assert pv.shape == (4, 7)
+
+
 
 def test__array__():
     """
@@ -211,10 +244,12 @@ def test__array__():
     assert np.array_equal(arr, filled)
 
 
-
-def test_indexing():
+def test_indexing_simple():
     """
-    simple indexing -- should return a single row as a view
+    Simple indexing -- should return a single row
+      of the right size.
+
+    Default IDs, so all in sync -- and left aligned.
     """
     rows = [3, 5, 2, 7]
 
@@ -224,6 +259,36 @@ def test_indexing():
         row = ra[i]
         print(row)
         assert row.shape == (rl,)
+
+
+def test_indexing_rows():
+    """
+    Single index -- should return a single row
+
+    That row should have Fill Values where missing data is.
+    """
+    data, pids, IDs, full_form = small_data_example()
+
+
+    full_var = small_data_example_full_variable()
+
+    pv = ParticleVariable.from_nested_data(data,
+                                           particle_ids=pids,
+                                           dtype=np.float64,
+                                           FillValue=nan,
+                                           dims=('time', 'pids')
+                                           )
+
+    for i, rl in enumerate(full_var):
+        row = pv[i]
+        print(f"{i=}")
+        print(f"{rl=}")
+        print(f"{row=}")
+        assert np.array_equal(row, rl, equal_nan=True)
+
+    assert False
+
+
 
 def test_str():
     rows = [3, 5, 2, 7]
@@ -267,9 +332,9 @@ def test_iteration():
 def test_init_from_data():
     rows = [3, 5, 2, 7]
     data = np.arange(sum(rows))
-    ra = ParticleVariable(data, rows)
+    pv = ParticleVariable(data, rows)
 
-    assert np.array_equal(ra[2], [8, 9])
+    assert np.array_equal(pv[2], [8, 9])
 
 
 def test_init_from_bad_data():
