@@ -189,7 +189,6 @@ class ParticleVariable():
         :param dims=('time', 'particle_ids'): dimension names
         :type dims: tuple[str]
         """
-        breakpoint()
         data = np.asarray(data)
 
         if len(data.shape) != 1:
@@ -198,7 +197,6 @@ class ParticleVariable():
             raise ValueError("``sum(row_lengths)`` must equal len(data).")
         if time is not None and len(row_lengths) != len(time):
             raise ValueError("number of rows must equal number of times")
-        # FixMe -- should be specified?
         self.dims = dims
         self._time = time
         self._data_array = data
@@ -215,9 +213,9 @@ class ParticleVariable():
         self._FillValue = (self._get_fill_value(data.dtype)
                            if FillValue is None else FillValue)
         self._id_row_index = self._build_id_index(self._particle_ids)
+        self._shape = (len(row_lengths), len(self._id_row_index))
         self.attrs = attrs if attrs is not None else {}
         self.name = name
-
 
     @classmethod
     def from_nested_data(cls,
@@ -250,7 +248,6 @@ class ParticleVariable():
         :type attrs: Mapping
 
         """
-        # breakpoint()
 
         # unpack the data:
         row_lengths = []
@@ -394,7 +391,8 @@ class ParticleVariable():
         create an empty ParticleVariable
 
         :param row_lengths: Sequence of row lengths. This is a full
-                            specification of the shape and size.
+                            specification of the shape and size of the underlying
+                            ragged array, but not the virtual size.
 
         """
         self = cls.__new__(cls)
@@ -412,7 +410,7 @@ class ParticleVariable():
 
     @classmethod
     def ones(cls, row_lengths, dtype=np.float64, FillValue=None):
-        self = cls.empty(row_lengths, dtype)
+        self = cls.empty(row_lengths, dtype, FillValue)
         self._data_array[:] = 1
         return self
 
@@ -475,7 +473,7 @@ class ParticleVariable():
 
     @property
     def shape(self):
-        return (len(self), np.diff(self._start_indexes).max())
+        return self._shape
 
     def __len__(self):
         return len(self._start_indexes) - 1

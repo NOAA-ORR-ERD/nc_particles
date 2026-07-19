@@ -42,7 +42,7 @@ def small_data_example():
             ]
     pids = [[17, 12, 3, 11],
             [12, 11],
-            [12, 17, 13, 18, 5],
+            [12, 11, 13, 18, 5],
             [13, 18, 5],
             ]
     return data, pids, IDs, full_form  # = small_data_example()
@@ -86,32 +86,25 @@ def test_construction():
     assert ra.dtype == np.dtype(np.float32)
 
 def test_from_nested_data():
-    data = [[1, 2, 3, 4],
-            [5, 6],
-            [7, 8, 9, 10, 11],
-            [12, 13, 14],
-            ]
-    pids = [[1, 2, 3, 4],
-            [2, 4],
-            [2, 4, 5, 6, 7],
-            [5, 6, 7],
-            ]
-
-    ra = ParticleVariable.from_nested_data(data,
+    data, pids, IDs, full_form = small_data_example()
+    pv = ParticleVariable.from_nested_data(data,
                                            particle_ids=pids,
                                            dtype=np.float32)
 
-    # print(f"{ra._start_indexes=}")
+    assert pv.dims == ('time', 'particle_ids')
+    assert pv.shape == (len(full_form), len(full_form[0]))
 
-    for row1, row2 in zip(data, ra):
-        assert np.array_equal(row1, row2)
-    # testing interenal structure -- but what can you do?
-    for row1, row2 in zip(data, ra):
-        assert np.array_equal(row1, row2)
-    assert np.array_equal(ra._particle_ids,
-                          [1, 2, 3, 4, 2, 4, 2, 4, 5, 6, 7, 5, 6, 7])
+    for row1, row2 in zip(full_form, pv):
+        print()
+        print(row1)
+        print(row2)
+        assert np.array_equal(row1, row2, equal_nan=True)
 
-    print(ra.__repr__())
+    # # testing internal structure -- but what can you do?
+    # for row1, row2 in zip(data, pv):
+    #     assert np.array_equal(row1, row2)
+    # assert np.array_equal(ra._particle_ids,
+    #                       [1, 2, 3, 4, 2, 4, 2, 4, 5, 6, 7, 5, 6, 7])
 
 
 def test_from_nested_data_duplicate_id():
@@ -246,21 +239,26 @@ def test__array__():
     assert np.array_equal(arr, filled)
 
 
-def test_indexing_simple():
+def test_ones():
     """
-    Simple indexing -- should return a single row
-      of the right size.
-
     Default IDs, so all in sync -- and left aligned.
     """
     rows = [3, 5, 2, 7]
 
-    ra = ParticleVariable.ones(rows, dtype=np.int32)
+    #this should look like this:
+    FV = 99999
+    full_form = [[1,  1,  1, FV, FV, FV, FV],
+                 [1,  1,  1,  1,  1, FV, FV],
+                 [1,  1, FV, FV, FV, FV, FV],
+                 [1,  1,  1,  1,  1,  1,  1],
+                 ]
 
-    for i, rl in enumerate(rows):
-        row = ra[i]
-        print(row)
-        assert row.shape == (rl,)
+    pv = ParticleVariable.ones(rows, dtype=np.int32, FillValue = FV)
+
+    assert pv.shape == (4, 7)
+
+    for i in range(len(rows)):
+        assert np.array_equal(pv[i], full_form[i])
 
 
 def test_indexing_rows():
