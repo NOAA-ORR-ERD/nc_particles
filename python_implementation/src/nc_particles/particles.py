@@ -189,7 +189,7 @@ class ParticleVariable():
         :param dims=('time', 'particle_ids'): dimension names
         :type dims: tuple[str]
         """
-
+        breakpoint()
         data = np.asarray(data)
 
         if len(data.shape) != 1:
@@ -227,7 +227,7 @@ class ParticleVariable():
                          particle_ids=None,
                          FillValue=None,
                          attrs=None,
-                         dims=None
+                         dims=('time', 'particle_ids'),
                          ):
         """
         create a ParticleVariable for already nested data:
@@ -250,6 +250,7 @@ class ParticleVariable():
         :type attrs: Mapping
 
         """
+        # breakpoint()
 
         # unpack the data:
         row_lengths = []
@@ -461,8 +462,7 @@ class ParticleVariable():
             except AttributeError:
                 # not a simple index
                 raise TypeError(f"indices must be integers or slices, not {type(indexes)}")
-
-            breakpoint()
+            # single index -- should return a row
             row = np.empty(self.shape[1], dtype=self.dtype)
             row[:] = self._FillValue
             data = self._data_array[self._start_indexes[ind] : self._start_indexes[ind+1]]

@@ -111,6 +111,8 @@ def test_from_nested_data():
     assert np.array_equal(ra._particle_ids,
                           [1, 2, 3, 4, 2, 4, 2, 4, 5, 6, 7, 5, 6, 7])
 
+    print(ra.__repr__())
+
 
 def test_from_nested_data_duplicate_id():
     data = [[1, 2, 3, 4],
@@ -413,7 +415,7 @@ def test__build_index():
     """
     Testing the index of IDs to column number
     note: this is an implementation detail, so may need to be fixed
-          if the implementaton
+          if the implementation
     """
 #    data, pids = small_data_example()
 
@@ -430,13 +432,15 @@ def test__build_index():
     print([int(i) for i in result])
     assert np.array_equal(list(id_index.keys()), result)
 
-@pytest.mark.xfail(reason="not working yet")
+# @pytest.mark.xfail(reason="not working yet")
 def test_ParticleVariable_get_item():
-    data, pids = small_data_example()
+    data, pids, IDs, full_form = small_data_example()
 
     pv = ParticleVariable.from_nested_data(data,
-                                           particle_ids=pids, dtype=np.float32)
+                                           particle_ids=pids,
+                                           dtype=np.float32)
 
+    # breakpoint()
     # 1D indexing (getting a row)
     FV = pv._FillValue
     assert np.array_equal(pv[0], [1, 2, 3, 4, FV, FV, FV])
