@@ -17,13 +17,13 @@ Please use issues and pull requests in that project for comments and issues.
 
 Particularly after the DeepWater Horizon Oil Spill incident, there has been an increase in interest and model development for oil spill models. Most oil spill models are fundamentally particle tracking models.  In order to simplify communication and data exchange, a standard for the output for such models is needed.
 
-The netcdf CF metadata standard (http://cfconventions.org/) has been very successful for facilitating data exchange among climate modelers, and has been expanded to support, and been widely adopted by, the atmospheric and oceanographic modeling community, as well as field data storage and sharing.  However, the CF standard does not currently include an appropriate standard for the trajectories of collections of particles as output by particle tracking models.  Thus we propose to introduce a new standard data format for particle tracking results that builds on the CF standard, maintaining compatibility wherever possible.
+The netcdf CF metadata standard (http://cfconventions.org/) has been very successful for facilitating data exchange among climate modelers, and has been expanded to support, and been widely adopted by, the atmospheric and oceanographic modeling community, as well as field data storage and sharing.  However, the CF standard does not currently include an appropriate standard for the trajectories of collections of particles as output by particle tracking models (It does include standards for "trajectories", but this was designed primarily for individual trajectories, such as from oceanic drifters, and is not as suitable for particle tracking models -- see motivation for discussion. And that part of the CF standard was not in place when this effort began).  Thus we propose to introduce a new standard data format for particle tracking results that builds on the CF standard, maintaining compatibility wherever possible.
 
 While the original motivation (and background of most of the participants) was to support oil spill transport models, we hope that the standard will accommodate other particle tracking models: larval transport, atmospheric dispersion, etc.
 
 ## History:
 
-Discussion of this standard began informally via email and some discussion on the cf-metadata mailing list (http://mailman.cgd.ucar.edu/mailman/listinfo/cf-metadata), involving people from NOAA, SINTEF, Unidata, USGS, and ASA
+Discussion of this standard began informally via email and some discussion on the cf-metadata mailing list (http://mailman.cgd.ucar.edu/mailman/listinfo/cf-metadata -- dead link, if anyone knows of an archive, please let us know.) in 2011, involving people from NOAA, SINTEF, Unidata, USGS, and ASA
 
 ## NetCDF Version
 
