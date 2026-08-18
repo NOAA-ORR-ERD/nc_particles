@@ -16,15 +16,19 @@ xarray = "*"
 netcdf4 = "*"
 
 [feature.dev.pypi-dependencies]
-nc_particles = { path = ".", editable = true }
+# nc_particles = { path = ".", editable = true }
 
 [feature.dev.dependencies]
 ipython = "*"
 ruff = "*"
 
+
 [feature.build.dependencies]
 pip = "*"
 hatchling = "*"
+python-build = "*"
+hatch-vcs = "*"
+
 
 [feature.test.dependencies]
 pytest = "*"

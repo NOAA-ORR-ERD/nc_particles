@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 
@@ -17,7 +17,7 @@ dependencies = [
   "xarray",
   "netCDF4",
 ]
-requires-python = ">= 3.11"
+requires-python = ">= 3.12"
 
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -36,20 +36,19 @@ classifiers = [
 Repository = "https://github.com/NOAA-ORR-ERD/nc_particles"
 
 [tool.hatch.version]
-path = "src/nc_particles/__init__.py"
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/nc_particles/_version.py"
+
+[tool.hatch.version.raw-options]
+root = ".."
 
 [tool.hatch.build.targets.sdist]
-ignore-vcs = false # so it will use .gitignore
-
-# [tool.hatch.build.targets.sdist]
 # include = [
-#   "pkg/*.py",
-#   "/tests",
+#     "python_implementation/nc_particles",
 # ]
-# exclude = [
-#   "*.json",
-#   "pkg/_compat.py",
-# ]
+ignore-vcs = false # so it will use .gitignore
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/nc_particles"]
