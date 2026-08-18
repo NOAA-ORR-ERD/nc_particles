@@ -19,6 +19,6 @@ jobs:
         environments: dev312
 
     - name: Lint
-      working-directory: python_implimentation
+      working-directory: python_implementation
 #      continue-on-error: true
       run: pixi run -e dev312 lint
