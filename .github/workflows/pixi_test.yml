@@ -29,12 +29,9 @@ jobs:
       - name: Setup Pixi
         uses: prefix-dev/setup-pixi@v0.10.1
         with:
-          manifest-path: python_implementation/pyproject.toml
-          # Specify which environment from your pixi.toml to install
+          manifest-path: pyproject.toml
           environments: ${{ matrix.environment }}
-          # Automatically caches the environment based on pixi.lock
           cache: true
-          # cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
 
       - name: Run Tests
         run: pixi run -e ${{ matrix.environment }} test
