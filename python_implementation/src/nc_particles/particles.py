@@ -462,7 +462,6 @@ class ParticleVariable():
                 # not a simple index
                 raise TypeError(f"indices must be integers or slices, not {type(indexes)}")
 
-            breakpoint()
             row = np.empty(self.shape[1], dtype=self.dtype)
             row[:] = self._FillValue
             data = self._data_array[self._start_indexes[ind] : self._start_indexes[ind+1]]

@@ -4,7 +4,7 @@
 [workspace]
 authors = ["Chris Barker <chris.barker@noaa.gov>"]
 channels = ["conda-forge"]
-name = "nc_particles"
+name = "nc_particles-dev"
 platforms = ["win-64", "linux-64", "osx-arm64", "osx-64"]
 version = "0.1.0"
 
@@ -16,7 +16,7 @@ xarray = "*"
 netcdf4 = "*"
 
 [feature.dev.pypi-dependencies]
-# nc_particles = { path = ".", editable = true }
+nc_particles = { path = ".", editable = true }
 
 [feature.dev.dependencies]
 ipython = "*"
@@ -55,12 +55,19 @@ test312 = [ "py312", "test", "build"]
 test313 = [ "py313", "test", "build"]
 test314 = [ "py314", "test", "build"]
 
-
 [tasks]
-install = { cmd = "pip install -v --no-deps --root-user-action=ignore ./", default-environment = "build"}
 build_wheel = {cmd = "python -m build ./", default-environment = "build"}
+
+install = { cmd = "pip install -v --no-deps --force-reinstall --root-user-action=ignore ./"}
+
+install_wheel = { cmd = "pip install --root-user-action=ignore --force-reinstall --no-index --find-links=./dist/  nc_particles", depends-on = ["build_wheel"], default-environment = "test312" }
+
 test = { cmd = "pytest --pyargs nc_particles", depends-on = ["install"] }
-lint = { cmd = "ruff check src/libgoods", default-environment = "dev"}
+
+test_wheel = { cmd = "pytest --pyargs nc_particles", depends-on = ["install_wheel"], default-environment = "test312" }
+
+lint = { cmd = "ruff check src", default-environment = "dev"}
+
 
 
 
