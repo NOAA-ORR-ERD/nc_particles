@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Module for manipulating netcdf particle files
 
@@ -36,7 +34,6 @@ file_attributes = {'conventions' : "CF-1.12",
 var_attributes = {'time': {'long_name':'time since the beginning of the simulation',
                            'standard_name':'time',
                            'calendar':'standard',
-                           'standard_name':'time',
                            # units will get set based on data
                             },
                   'particle_count': {'units':'1',
@@ -271,7 +268,7 @@ class Reader:
         """
         return the names of all the variables associated with the particles
         """
-        return [var for var in self.nc.variables.keys() if var not in SPECIAL_VARIABLES]
+        return [var for var in self.nc.variables if var not in SPECIAL_VARIABLES]
 
     def __repr__(self):
         return f'Reader("{self.nc.filepath()}")'
@@ -283,7 +280,7 @@ class Reader:
                 f"number of timesteps: {len(self.times)}\n"
                 )
 
-    def get_all_timesteps(self, variables=['latitude', 'longitude']):
+    def get_all_timesteps(self, variables=('latitude', 'longitude')):
         """
         returns the requested variables data from all timesteps as a
         dictionary keyed by the variable names
@@ -325,7 +322,7 @@ class Reader:
         var = self.nc.variables[variable]
         return {name: var.getncattr(name) for name in var.ncattrs()}
 
-    def get_timestep(self, timestep, variables=['latitude', 'longitude']):
+    def get_timestep(self, timestep, variables=('latitude', 'longitude')):
         """
         returns the requested variables data from a given timestep as a
         dictionary keyed by the variable names
@@ -341,7 +338,7 @@ class Reader:
         ind1, ind2 = self.data_index[timestep:timestep + 2]
         return {var: self.nc.variables[var][ind1:ind2] for var in variables}
 
-    def get_individual_trajectory(self, particle_id, variables=['latitude', 'longitude']):
+    def get_individual_trajectory(self, particle_id, variables=('latitude', 'longitude')):
         """
         returns the requested variables from trajectory of an individual particle
 

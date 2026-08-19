@@ -1,11 +1,7 @@
-#!/usr/bin/env python
-
 """
 Test code for nc_particles
 
 Not very complete
-
-Designed to be run with pytest
 """
 
 import os

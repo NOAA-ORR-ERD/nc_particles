@@ -57,7 +57,7 @@ def small_data_example_full_variable():
     IDs are arbitrary: non-monotonically increasing
 
     """
-    data, pids, IDs, full_form = small_data_example()
+    data, pids, IDs, full_form = small_data_example() #noqa: RUF059
     full_var = xr.Variable(('time', 'pid'), full_form)
 
     return full_var
@@ -206,7 +206,7 @@ def test_append_row_no_ids():
 
 def test_shape():
     # make sure shape works for "wonky" IDs
-    data, pids, IDs, full_form = small_data_example()
+    data, pids, IDs, full_form = small_data_example() #noqa: RUF059
 
     pv = ParticleVariable.from_nested_data(data, pids)
 
