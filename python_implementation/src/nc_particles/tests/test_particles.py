@@ -1,7 +1,7 @@
 """
 Tests for particles
 """
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from math import nan
 from pathlib import Path
 
@@ -267,7 +267,7 @@ def test_indexing_rows():
 
     That row should have Fill Values where missing data is.
     """
-    data, pids, IDs, full_form = small_data_example()
+    data, pids, IDs, full_form = small_data_example() #noqa: RUF059
 
 
     full_var = small_data_example_full_variable()
@@ -353,7 +353,7 @@ def test_init_from_bad_data():
         ra = ParticleVariable(data, rows)
     # time var doesn't match
     data = np.arange(sum(rows))
-    time = [datetime.now() + timedelta(hours=i) for i in range(len(rows) + 1)]
+    time = [datetime.now(tz=UTC) + timedelta(hours=i) for i in range(len(rows) + 1)]
     with pytest.raises(ValueError):
         ra = ParticleVariable(data, rows, time=time)  # noqa:F841
 
@@ -426,7 +426,7 @@ def test__build_index():
     #                                        particle_ids=pids, dtype=np.float32)
 
     print(id_index)
-    print([int(i) for i in id_index.keys()])
+    print([int(i) for i in id_index])
     print([int(i) for i in result])
     assert np.array_equal(list(id_index.keys()), result)
 
@@ -544,12 +544,12 @@ def test_iter():
     """
     parts = Particles.from_file(sample_file)
 
-    assert sorted(list(parts)) == sorted(['latitude', 'depth', 'mass', 'longitude'])
+    assert sorted(parts) == sorted(['latitude', 'depth', 'mass', 'longitude'])
 
 
 def test_keys():
     parts = Particles.from_file(sample_file)
-    assert sorted(list(parts.keys())) == sorted(['latitude', 'depth', 'mass', 'longitude'])
+    assert sorted(parts.keys()) == sorted(['latitude', 'depth', 'mass', 'longitude'])
 
 
 def test_dict_interface():
