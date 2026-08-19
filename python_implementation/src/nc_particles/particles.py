@@ -15,7 +15,7 @@ import xarray as xr
 DATA_DIM_NAME = "data"
 
 
-class Particles():
+class Particles:
     """
     complete set of data with output from a particle tracking model
     
@@ -60,14 +60,14 @@ class Particles():
 
         time_var = 'time' if time_var is None else time_var
         self.time = dataset[time_var]
-        time_dim = dataset.time.dims[0]
+        # time_dim = dataset.time.dims[0]
 
         if particle_count_var is not None:
             self._particle_count = dataset[particle_count_var]
         else:
             # find particle_count variable
             for var in dataset.data_vars.values():
-                if 'ragged_row_count' in var.attrs.keys():
+                if 'ragged_row_count' in var.attrs:
                     self._particle_count = var
                     break
             else:
@@ -148,13 +148,13 @@ class Particles():
         particle_id is a 1D array
         """
         # Start with a new dataset:
-        rect_ds = self.dataset.copy()
+        # rect_ds = self.dataset.copy()
 
         # Then replace the arrays
         raise NotImplementedError
 
 
-class ParticleVariable():
+class ParticleVariable:
     """
     xarray-Variable-like that holds the data associated with the particles
     """
@@ -396,8 +396,6 @@ class ParticleVariable():
                             specification of the shape and size.
 
         """
-        self = cls.__new__(cls)
-
         data = np.empty((sum(row_lengths),), dtype=dtype)
 
         return cls(data,
@@ -449,9 +447,9 @@ class ParticleVariable():
         # is it multiple indexes?
         if isinstance(indexes, tuple):
             raise NotImplementedError("get item is not implemented for 2D indexing")
-            time_ind = indexes[0]
-            particle_index = indexes[1]
-            row_ids = self._particle_ids[self._start_indexes[time_ind] : self._start_indexes[time_ind + 1]]
+            # time_ind = indexes[0]
+            # particle_index = indexes[1]
+            # row_ids = self._particle_ids[self._start_indexes[time_ind] : self._start_indexes[time_ind + 1]]
             
         else:
             if isinstance(indexes, slice):

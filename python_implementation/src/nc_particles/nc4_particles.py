@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Module for manipulating netcdf particle files
 
@@ -13,11 +11,9 @@ and is a test case for working with what hopefully will be a
 CF standard (or SOME standard..)
 """
 
-from datetime import datetime
-
-import numpy as np
 
 import netCDF4
+import numpy as np
 
 ## default attributes -- can be updated by user later.
 
@@ -38,7 +34,6 @@ file_attributes = {'conventions' : "CF-1.12",
 var_attributes = {'time': {'long_name':'time since the beginning of the simulation',
                            'standard_name':'time',
                            'calendar':'standard',
-                           'standard_name':'time',
                            # units will get set based on data
                             },
                   'particle_count': {'units':'1',
@@ -82,7 +77,7 @@ var_attributes['lat'] = var_attributes['latitude']
 SPECIAL_VARIABLES = ['time','particle_count']
 
 
-class Writer(object):
+class Writer:
     nc = None  # so the attribute will always be there.
     def __init__ (self,
                   filename,
@@ -166,7 +161,7 @@ class Writer(object):
             # this will get overwritten when the proper reference time is known
             time.units = "seconds since 2016-01-01T00:00:00"
         else:
-            time.units = 'seconds since {0}'.format(self.ref_time.isoformat())
+            time.units = f'seconds since {self.ref_time.isoformat()}'
 
         pc = nc.createVariable('particle_count', np.int32, ('time',))
         for name, value in self.var_attributes['particle_count'].items():
@@ -197,7 +192,7 @@ class Writer(object):
             # set the time units:
             if self.ref_time is None:
                 self.ref_time = timestamp
-            nc.variables['time'].units = 'seconds since {0}'.format(self.ref_time.isoformat())
+            nc.variables['time'].units = f'seconds since {self.ref_time.isoformat()}'
             for key, val in data.items():
                 val = np.asarray(val)
                 var = nc.createVariable(key, datatype=val.dtype, dimensions=('data'))
@@ -273,7 +268,7 @@ class Reader:
         """
         return the names of all the variables associated with the particles
         """
-        return [var for var in self.nc.variables.keys() if var not in SPECIAL_VARIABLES]
+        return [var for var in self.nc.variables if var not in SPECIAL_VARIABLES]
 
     def __repr__(self):
         return f'Reader("{self.nc.filepath()}")'
@@ -285,7 +280,7 @@ class Reader:
                 f"number of timesteps: {len(self.times)}\n"
                 )
 
-    def get_all_timesteps(self, variables=['latitude', 'longitude']):
+    def get_all_timesteps(self, variables=('latitude', 'longitude')):
         """
         returns the requested variables data from all timesteps as a
         dictionary keyed by the variable names
@@ -327,7 +322,7 @@ class Reader:
         var = self.nc.variables[variable]
         return {name: var.getncattr(name) for name in var.ncattrs()}
 
-    def get_timestep(self, timestep, variables=['latitude', 'longitude']):
+    def get_timestep(self, timestep, variables=('latitude', 'longitude')):
         """
         returns the requested variables data from a given timestep as a
         dictionary keyed by the variable names
@@ -343,7 +338,7 @@ class Reader:
         ind1, ind2 = self.data_index[timestep:timestep + 2]
         return {var: self.nc.variables[var][ind1:ind2] for var in variables}
 
-    def get_individual_trajectory(self, particle_id, variables=['latitude', 'longitude']):
+    def get_individual_trajectory(self, particle_id, variables=('latitude', 'longitude')):
         """
         returns the requested variables from trajectory of an individual particle
 

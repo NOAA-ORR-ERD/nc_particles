@@ -6,9 +6,8 @@ import pytest
 pytestmark = pytest.mark.skipif(True, reason="This is only experimental code")
 
 import numpy as np
-import xarray as xr
 import ragged
-
+import xarray as xr
 
 data = [[1, 2, 3, 4],
         [5, 6],

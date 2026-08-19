@@ -1,9 +1,9 @@
-from pathlib import Path
 import gc
+from pathlib import Path
 
-
-import numpy as np
 import netCDF4
+import numpy as np
+
 import nc_particles
 
 HERE = Path(__file__).parent
@@ -47,7 +47,7 @@ def test_read_variables():
     # set(), because order doesn't matter
     varnames = set(r.variables)
     r.close()
-    assert varnames == set(['latitude', 'depth', 'mass', 'id', 'longitude'])
+    assert varnames == {'latitude', 'depth', 'mass', 'id', 'longitude'}
 
 def test_get_all_timesteps():
     gc.collect()  # very much should not be necceary, but netCDF4 does not clean up after itself well.
@@ -58,7 +58,7 @@ def test_get_all_timesteps():
     assert 'depth' in data
     assert 'mass' in data
     assert 'id' in data
-    for name, val in data.items():
+    for val in data.values():
         assert len(val) == 3
     ## better to check actual data, but what can you do?
 

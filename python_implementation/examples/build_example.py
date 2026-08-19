@@ -6,10 +6,12 @@ A script to build a little example netcdf file for the nc_particles format
 This also serves as an example of how to use the Writer code.
 """
 
-import numpy as np
 import datetime
-import nc_particles
+
 import netCDF4
+import numpy as np
+
+import nc_particles
 
 # create the data
 
