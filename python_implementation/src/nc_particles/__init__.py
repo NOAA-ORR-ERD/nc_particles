@@ -1,4 +1,9 @@
-from .particles import Particles
+from ._version import __version__  #noqa: F401
 from .nc4_particles import Reader, Writer
+from .particles import Particles
 
-from ._version import __version__
+__all__ = [
+           'Particles',
+           'Reader',
+           'Writer'
+           ]

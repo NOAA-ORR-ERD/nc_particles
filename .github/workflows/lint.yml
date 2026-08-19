@@ -15,10 +15,10 @@ jobs:
       uses: prefix-dev/setup-pixi@v0.10.1
       with:
         cache: true
-        manifest-path: pixi.toml
+        manifest-path: python_implementation/pixi.toml
         environments: dev312
 
     - name: Lint
-      working-directory: python_implimentation
+      working-directory: python_implementation
 #      continue-on-error: true
       run: pixi run -e dev312 lint
