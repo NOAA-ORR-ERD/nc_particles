@@ -1,9 +1,9 @@
-from pathlib import Path
 import gc
+from pathlib import Path
 
-
-import numpy as np
 import netCDF4
+import numpy as np
+
 import nc_particles
 
 HERE = Path(__file__).parent

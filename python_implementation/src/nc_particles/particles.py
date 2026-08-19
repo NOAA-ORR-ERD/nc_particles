@@ -15,7 +15,7 @@ import xarray as xr
 DATA_DIM_NAME = "data"
 
 
-class Particles():
+class Particles:
     """
     complete set of data with output from a particle tracking model
     
@@ -154,7 +154,7 @@ class Particles():
         raise NotImplementedError
 
 
-class ParticleVariable():
+class ParticleVariable:
     """
     xarray-Variable-like that holds the data associated with the particles
     """

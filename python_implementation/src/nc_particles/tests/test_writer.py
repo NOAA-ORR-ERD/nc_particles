@@ -11,10 +11,10 @@ Designed to be run with pytest
 import datetime
 from pathlib import Path
 
-import pytest
 import netCDF4
-import nc_particles
+import pytest
 
+import nc_particles
 
 HERE = Path(__file__).parent
 OUTPUT = HERE / "output"

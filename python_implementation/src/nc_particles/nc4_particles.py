@@ -13,11 +13,9 @@ and is a test case for working with what hopefully will be a
 CF standard (or SOME standard..)
 """
 
-from datetime import datetime
-
-import numpy as np
 
 import netCDF4
+import numpy as np
 
 ## default attributes -- can be updated by user later.
 
@@ -82,7 +80,7 @@ var_attributes['lat'] = var_attributes['latitude']
 SPECIAL_VARIABLES = ['time','particle_count']
 
 
-class Writer(object):
+class Writer:
     nc = None  # so the attribute will always be there.
     def __init__ (self,
                   filename,
@@ -166,7 +164,7 @@ class Writer(object):
             # this will get overwritten when the proper reference time is known
             time.units = "seconds since 2016-01-01T00:00:00"
         else:
-            time.units = 'seconds since {0}'.format(self.ref_time.isoformat())
+            time.units = f'seconds since {self.ref_time.isoformat()}'
 
         pc = nc.createVariable('particle_count', np.int32, ('time',))
         for name, value in self.var_attributes['particle_count'].items():
@@ -197,7 +195,7 @@ class Writer(object):
             # set the time units:
             if self.ref_time is None:
                 self.ref_time = timestamp
-            nc.variables['time'].units = 'seconds since {0}'.format(self.ref_time.isoformat())
+            nc.variables['time'].units = f'seconds since {self.ref_time.isoformat()}'
             for key, val in data.items():
                 val = np.asarray(val)
                 var = nc.createVariable(key, datatype=val.dtype, dimensions=('data'))

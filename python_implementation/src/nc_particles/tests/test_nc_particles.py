@@ -11,8 +11,9 @@ Designed to be run with pytest
 import os
 from pathlib import Path
 
-import pytest
 import netCDF4
+import pytest
+
 import nc_particles
 
 HERE = Path(__file__).parent

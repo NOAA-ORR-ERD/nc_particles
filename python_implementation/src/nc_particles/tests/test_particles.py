@@ -2,14 +2,14 @@
 Tests for particles
 """
 from datetime import datetime, timedelta
-from pathlib import Path
 from math import nan
+from pathlib import Path
 
 import numpy as np
-import xarray as xr
 import pytest
+import xarray as xr
 
-from nc_particles.particles import ParticleVariable, Particles
+from nc_particles.particles import Particles, ParticleVariable
 
 pytestmark = pytest.mark.skip(reason="xarray integration not complete")
 
