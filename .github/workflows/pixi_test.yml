@@ -1,0 +1,36 @@
+name: Test nc_particles with Pixi
+
+on:
+  push:
+#    branches: [main]
+  pull_request:
+#    branches: [main]
+
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      # Test against multiple environments (e.g., different Python versions)
+      matrix:
+        environment: [test312, test314]
+        # do we even need these three?
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Pixi
+        uses: prefix-dev/setup-pixi@v0.10.1
+        with:
+          manifest-path: python_implementation/pixi.toml
+          environments: ${{ matrix.environment }}
+          cache: true
+
+      - name: Run Tests
+        working-directory: python_implementation
+        run: pixi run -e ${{ matrix.environment }} test
+
+

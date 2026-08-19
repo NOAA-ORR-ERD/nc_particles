@@ -11,7 +11,7 @@ Particle tracking models store data associated with particles that are moving in
 
 In the simplest case, the data can be stored in a (time, particle_id) 2D array.
 
-However, some model create and destroy particles as the model runs -- so for each timestep the can be a different number of particles -- hence the ragged array.
+However, some models create and destroy particles as the model runs -- so for each timestep the can be a different number of particles -- hence the ragged array.
 
 A draft netcdf standard has been defined here:
 
@@ -53,7 +53,7 @@ Out[5]: (4, None)
 ```
 This makes some sense, as the ragged dimension is variable, and thus undefined.
 
-Howver, that does not make xarray happy:
+However, that does not make xarray happy:
 
 ```
 In [6]: xr.DataArray(ra)
@@ -73,11 +73,11 @@ File ~/miniforge3/envs/ragged/lib/python3.12/site-packages/xarray/namedarray/cor
 
 TypeError: unsupported operand type(s) for *: 'int' and 'NoneType'
 ```
-xarray very much expects the shape to a a tuple of integers.
+xarray very much expects the shape to be a tuple of integers.
 
-NOTE: apparetnly the None in shape does conform to the array interface -- but not xarray -- but what *should* xarray do with this?
+NOTE: apparently the None in shape does conform to the array interface -- but not xarray -- but what *should* xarray do with this?
 
-One option (and what I've done with my implementation) is to think of a ragged array as a special case of a sparse array -- to it's shape would be: `(num_rows, longest_row)`
+One option (and what I've done with my implementation) is to think of a ragged array as a special case of a sparse array -- to its shape would be: `(num_rows, longest_row)`
 
 2) When iterating over a ragged array, you get 2-d ragged arrays:
 ```

@@ -159,7 +159,15 @@ class ParticleVariable():
     xarray-Variable-like that holds the data associated with the particles
     """
 
-    def __init__(self, data, row_lengths, time=None, particle_ids=None, FillValue=None, attrs=None, name=''):
+    def __init__(self,
+                 data,
+                 row_lengths,
+                 time=None,
+                 particle_ids=None,
+                 FillValue=None,
+                 attrs=None,
+                 name='',
+                 dims=('time', 'particle_ids')):
         """
         Initialize a ParticleVariable from existing data.
 
@@ -177,18 +185,21 @@ class ParticleVariable():
 
         :param attrs=None: attributes associated with the data, e.g. units, etc.
         :type attrs: Mapping
+
+        :param dims=('time', 'particle_ids'): dimension names
+        :type dims: tuple[str]
         """
-        try:
-            data = xr.DataArray(data, dims=('data',))
-        except ValueError as err:
-            if "different number of dimensions" in err.args[0]:
-                raise ValueError("input data array should be one dimensional.")
-            else:
-                raise err
+
+        data = np.asarray(data)
+
+        if len(data.shape) != 1:
+            raise ValueError("input data array should be one dimensional.")
         if sum(row_lengths) != len(data):
             raise ValueError("``sum(row_lengths)`` must equal len(data).")
         if time is not None and len(row_lengths) != len(time):
             raise ValueError("number of rows must equal number of times")
+        # FixMe -- should be specified?
+        self.dims = dims
         self._time = time
         self._data_array = data
         self._start_indexes = np.zeros((len(row_lengths) + 1,), dtype=np.int32)
@@ -200,32 +211,24 @@ class ParticleVariable():
         else:
             _particle_ids = np.array(particle_ids, dtype=np.int32)
 
-        self._particle_ids = xr.DataArray(_particle_ids, dims=('data',))
+        self._particle_ids = _particle_ids
         self._FillValue = (self._get_fill_value(data.dtype)
                            if FillValue is None else FillValue)
         self._id_row_index = self._build_id_index(self._particle_ids)
         self.attrs = attrs if attrs is not None else {}
         self.name = name
 
-    @staticmethod
-    def _build_id_index(ids):
-        """
-        builds the index of IDs to column numbers
-
-        preserves the order of the IDs
-
-        (neccesary? maybe not, but seems like a good UI)
-        """
-        ids = np.asarray(ids)
-        vals, idx = np.unique(ids, sorted=True, return_index=True)
-        unique_ids = vals[np.argsort(idx)]
-
-        id_index = {idx: j for j, idx in enumerate(unique_ids)}
-
-        return id_index
 
     @classmethod
-    def from_nested_data(cls, data, *, dtype=np.float64, particle_ids=None, FillValue=None, attrs=None):
+    def from_nested_data(cls,
+                         data,
+                         *,
+                         dtype=np.float64,
+                         particle_ids=None,
+                         FillValue=None,
+                         attrs=None,
+                         dims=None
+                         ):
         """
         create a ParticleVariable for already nested data:
 
@@ -267,7 +270,25 @@ class ParticleVariable():
                    row_lengths=row_lengths,
                    particle_ids=particle_ids_arr,
                    FillValue=FillValue,
-                   attrs=attrs)
+                   attrs=attrs,
+                   dims=dims,
+                   )
+
+    @staticmethod
+    def _build_id_index(ids):
+        """
+        builds the index of IDs to column numbers
+
+        preserves the order of the IDs
+            (necessary? maybe not, but seems like a good UI)
+        """
+        ids = np.asarray(ids)
+        vals, idx = np.unique(ids, sorted=True, return_index=True)
+        unique_ids = vals[np.argsort(idx)]
+
+        id_index = {idx: j for j, idx in enumerate(unique_ids)}
+
+        return id_index
 
     def append_row(self, row, particle_ids=None):
         """
@@ -276,16 +297,15 @@ class ParticleVariable():
 
         :param particle_ids: ids of the particle in that row
         """
-        row = xr.DataArray(row, dims=('data',))
+        row = np.asarray(row)
         if particle_ids is None:
             particle_ids = np.arange(len(row), dtype=np.int32)
         else:
             particle_ids = np.array(particle_ids, dtype=np.int32)
         if len(np.unique(particle_ids)) != len(particle_ids):
             raise ValueError("particle_ids must be unique")
-        particle_ids = xr.DataArray(particle_ids, dims=('data',))
-        self._particle_ids = xr.concat((self._particle_ids, particle_ids), 'data')
-        self._data_array = xr.concat((self._data_array, row), 'data')
+        self._particle_ids = np.concat((self._particle_ids, particle_ids), axis=0)
+        self._data_array = np.concat((self._data_array, row), axis=0)
         end = self._start_indexes[-1] + len(row)
         self._start_indexes = np.append(self._start_indexes, end)
 
@@ -319,7 +339,6 @@ class ParticleVariable():
             ids is 1-d array of the ids corresponding to the columns
             full_array is a 2D array, with any missing data replaced by the FillValue
         """
-        # FixME: should this return an xarray.DataArray ?
         # NOTE: this is not very optimized, there may be a better way
         #       and could certainly be optimized for the special case
         #       of a dense array
@@ -333,13 +352,13 @@ class ParticleVariable():
         #                       full_arr,
         #                       attrs=self.attrs
         #                       )
-        full_da = xr.DataArray(data=full_arr,
-                               coords=coords,
-                               dims=None, # should figure it out?
-                               name=self.name,  # give it a name?
-                               attrs=self.attrs,
-                               indexes=None,  # not sure what these are
-                               fastpath=False)
+        full_da = xr.Variable(data=full_arr,
+                              coords=coords,
+                              dims=None, # should figure it out?
+                              name=self.name,  # give it a name?
+                              attrs=self.attrs,
+                              indexes=None,  # not sure what these are
+                              fastpath=False)
         return all_ids, full_da
 
     @staticmethod
@@ -363,23 +382,32 @@ class ParticleVariable():
         return fv
 
     @classmethod
-    def empty(cls, row_lengths, dtype=np.float64, FillValue=None):
+    def empty(cls,
+              row_lengths,
+              dtype=np.float64,
+              FillValue=None,
+              time=None,
+              dims=('time', 'particle_ids'),
+              ):
         """
-        create an empty ragged array
+        create an empty ParticleVariable
 
         :param row_lengths: Sequence of row lengths. This is a full
                             specification of the shape and size.
 
         """
         self = cls.__new__(cls)
-        self._data_array = xr.DataArray(np.empty((sum(row_lengths),), dtype=dtype),
-                                        dims=('data',))
-        # self._row_lengths = row_lengths
-        self._start_indexes = np.zeros((len(row_lengths) + 1,), dtype=np.int32)
-        self._start_indexes[1:] = np.cumsum(row_lengths)
-        self._FillValue = self._get_fill_value(self._data_array.dtype) if FillValue is None else FillValue
 
-        return self
+        data = np.empty((sum(row_lengths),), dtype=dtype)
+
+        return cls(data,
+                   row_lengths,
+                   time=None,
+                   particle_ids=None,
+                   FillValue=FillValue,
+                   attrs=None,
+                   name='',
+                   dims=dims)
 
     @classmethod
     def ones(cls, row_lengths, dtype=np.float64, FillValue=None):
@@ -420,20 +448,29 @@ class ParticleVariable():
     def __getitem__(self, indexes):
         # is it multiple indexes?
         if isinstance(indexes, tuple):
-            raise NotImplementedError("get item is not implmented for 2D indexing")
+            raise NotImplementedError("get item is not implemented for 2D indexing")
             time_ind = indexes[0]
             particle_index = indexes[1]
             row_ids = self._particle_ids[self._start_indexes[time_ind] : self._start_indexes[time_ind + 1]]
             
         else:
+            if isinstance(indexes, slice):
+                raise NotImplementedError("indexing by slice not implimented yet")
             try:
                 ind = indexes.__index__()
             except AttributeError:
                 # not a simple index
-                raise NotImplementedError("multi-dim indexing not implimented yet")
-            result = self._data_array[self._start_indexes[ind] : self._start_indexes[ind+1]]
+                raise TypeError(f"indices must be integers or slices, not {type(indexes)}")
 
-        return result
+            row = np.empty(self.shape[1], dtype=self.dtype)
+            row[:] = self._FillValue
+            data = self._data_array[self._start_indexes[ind] : self._start_indexes[ind+1]]
+            pids = self._particle_ids[self._start_indexes[ind] : self._start_indexes[ind+1]]
+            for pid, dat in zip(pids, data):
+                row[self._id_row_index[pid]] = dat
+            row_var = xr.Variable(dims=(self.dims[1],), data=row)
+
+        return row_var
 
     @property
     def shape(self):
@@ -441,36 +478,6 @@ class ParticleVariable():
 
     def __len__(self):
         return len(self._start_indexes) - 1
-
-
-
-# class ParticleVariable(RaggedArray):
-#     """
-#     Class to hold the data associated with a set of particles
-#     """
-#     def __init__(self, var, particle_id, particle_counts):
-#         self._particle_id = particle_id
-#         super().__init__(var, particle_counts)    
-
-#     def __getitem__(self, indexes):
-#         # is it multiple indexes?
-#         if isinstance(indexes, tuple):
-#             time_ind = indexes[0]
-#             particle_index = indexes[1]
-#         else:
-#             return super().__getitem__(indexes)
-
-#     def get_individual_particle(self, particle_id):
-#         """
-#         returns the data of an individual particle
-
-#         :param particle_id: the id of the particle you want to track
-#         """
-#         # fixme: cache this somehow?
-#         #        keep track of time?
-#         indexes = np.where(self._particle_id[:] == particle_id)
-
-#         return self._data_array[indexes]
 
 
 
